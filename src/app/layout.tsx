@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -57,6 +58,13 @@ export default function RootLayout({
           {children}
           <Toaster richColors position="top-center" />
         </ThemeProvider>
+        <Script
+          id="sw"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');`,
+          }}
+        />
       </body>
     </html>
   );

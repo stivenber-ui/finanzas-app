@@ -69,7 +69,7 @@ export function NuevaCuentaForm() {
 
           <div className="flex flex-col gap-2">
             <Label>Tipo</Label>
-            <Select value={type} onValueChange={(v) => setType(v ?? "")}>
+            <Select value={type} items={ACCOUNT_TYPES.map((t) => ({ value: t.value, label: t.label }))} onValueChange={(v) => setType(v ?? "")}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecciona el tipo" />
               </SelectTrigger>

@@ -77,7 +77,7 @@ export function NuevaMetaForm({ accounts }: { accounts: Account[] }) {
 
           <div className="flex flex-col gap-2">
             <Label>Cuenta asociada (opcional)</Label>
-            <Select value={accountId} onValueChange={(v) => setAccountId(!v || v === "_none" ? "" : v)}>
+            <Select value={accountId || "_none"} items={[{value:"_none",label:"Sin cuenta específica"},...accounts.map((a) => ({value:a.id,label:a.name}))]} onValueChange={(v) => setAccountId(!v || v === "_none" ? "" : v)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Sin cuenta específica" />
               </SelectTrigger>

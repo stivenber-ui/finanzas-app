@@ -109,7 +109,7 @@ export function EditarMetaForm({ goal, accounts }: { goal: Goal; accounts: Accou
 
           <div className="flex flex-col gap-2">
             <Label>Estado</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v ?? "")}>
+            <Select value={status} items={STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))} onValueChange={(v) => setStatus(v ?? "")}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -123,7 +123,7 @@ export function EditarMetaForm({ goal, accounts }: { goal: Goal; accounts: Accou
 
           <div className="flex flex-col gap-2">
             <Label>Cuenta asociada (opcional)</Label>
-            <Select value={accountId || "_none"} onValueChange={(v) => setAccountId(!v || v === "_none" ? "" : v)}>
+            <Select value={accountId || "_none"} items={[{ value: "_none", label: "Sin cuenta específica" }, ...accounts.map((a) => ({ value: a.id, label: a.name }))]} onValueChange={(v) => setAccountId(!v || v === "_none" ? "" : v)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Sin cuenta específica" />
               </SelectTrigger>

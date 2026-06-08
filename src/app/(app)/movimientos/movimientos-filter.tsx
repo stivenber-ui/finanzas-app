@@ -62,7 +62,7 @@ export function MovimientosFilter({ accounts }: { accounts: Account[] }) {
         />
       </div>
       <div className="flex gap-2">
-        <Select value={type} onValueChange={(v) => push({ type: !v || v === "_all" ? "" : v })}>
+        <Select value={type || "_all"} items={typeOptions.map((o) => ({ value: o.value || "_all", label: o.label }))} onValueChange={(v) => push({ type: !v || v === "_all" ? "" : v })}>
           <SelectTrigger className="flex-1">
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
@@ -75,7 +75,7 @@ export function MovimientosFilter({ accounts }: { accounts: Account[] }) {
           </SelectContent>
         </Select>
         {accounts.length > 1 && (
-          <Select value={accountId} onValueChange={(v) => push({ account_id: !v || v === "_all" ? "" : v })}>
+          <Select value={accountId || "_all"} items={[{ value: "_all", label: "Todas las cuentas" }, ...accounts.map((a) => ({ value: a.id, label: a.name }))]} onValueChange={(v) => push({ account_id: !v || v === "_all" ? "" : v })}>
             <SelectTrigger className="flex-1">
               <SelectValue placeholder="Cuenta" />
             </SelectTrigger>
