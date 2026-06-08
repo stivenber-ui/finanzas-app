@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Archive } from "lucide-react";
+import { Archive, ArchiveRestore } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,7 @@ type Account = {
   initial_balance: number;
   credit_limit: number | null;
   sort_order: number;
+  archived_at: string | null;
 };
 
 function formatForInput(value: number): string {
@@ -55,6 +56,8 @@ export function EditarCuentaForm({ account }: { account: Account }) {
   const [loading, setLoading] = useState(false);
   const [archiving, setArchiving] = useState(false);
 
+  const isArchived = !!account.archived_at;
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setLoading(true);
@@ -72,8 +75,8 @@ export function EditarCuentaForm({ account }: { account: Account }) {
 
     if (error) { toast.error("No se pudo guardar", { description: error.message }); return; }
     toast.success("Cuenta actualizada");
-    router.replace("/cuentas");
     router.refresh();
+    router.replace("/cuentas");
   }
 
   async function handleArchive() {
@@ -83,13 +86,28 @@ export function EditarCuentaForm({ account }: { account: Account }) {
     setArchiving(false);
     if (error) { toast.error("No se pudo archivar", { description: error.message }); return; }
     toast.success("Cuenta archivada");
-    router.replace("/cuentas");
     router.refresh();
+    router.replace("/cuentas");
+  }
+
+  async function handleUnarchive() {
+    setArchiving(true);
+    const { error } = await supabase.from("accounts").update({ archived_at: null }).eq("id", account.id);
+    setArchiving(false);
+    if (error) { toast.error("No se pudo activar la cuenta", { description: error.message }); return; }
+    toast.success("Cuenta reactivada");
+    router.refresh();
+    router.replace("/cuentas");
   }
 
   return (
     <Card>
       <CardContent className="pt-6">
+        {isArchived && (
+          <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+            Esta cuenta está archivada y no aparece en los formularios.
+          </p>
+        )}
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             <Label htmlFor="name">Nombre</Label>
@@ -134,17 +152,30 @@ export function EditarCuentaForm({ account }: { account: Account }) {
             <Button type="submit" size="lg" disabled={loading || archiving}>
               {loading ? "Guardando..." : "Guardar cambios"}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              disabled={loading || archiving}
-              onClick={handleArchive}
-              className="text-muted-foreground"
-            >
-              <Archive className="size-4" />
-              {archiving ? "Archivando..." : "Archivar cuenta"}
-            </Button>
+            {isArchived ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                disabled={loading || archiving}
+                onClick={handleUnarchive}
+              >
+                <ArchiveRestore className="size-4" />
+                {archiving ? "Activando..." : "Activar cuenta"}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                disabled={loading || archiving}
+                onClick={handleArchive}
+                className="text-muted-foreground"
+              >
+                <Archive className="size-4" />
+                {archiving ? "Archivando..." : "Archivar cuenta"}
+              </Button>
+            )}
           </div>
         </form>
       </CardContent>

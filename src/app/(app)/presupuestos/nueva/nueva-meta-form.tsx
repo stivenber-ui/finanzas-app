@@ -47,8 +47,8 @@ export function NuevaMetaForm({ accounts }: { accounts: Account[] }) {
 
     if (error) { toast.error("No se pudo crear la meta", { description: error.message }); return; }
     toast.success("Meta creada");
-    router.replace("/presupuestos");
     router.refresh();
+    router.replace("/presupuestos");
   }
 
   return (

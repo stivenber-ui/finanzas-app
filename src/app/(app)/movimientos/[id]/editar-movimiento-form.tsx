@@ -110,7 +110,7 @@ export function EditarMovimientoForm({
     if (error) { toast.error("No se pudo guardar el movimiento", { description: error.message }); return; }
     toast.success("Movimiento actualizado");
     router.refresh();
-    router.replace("/movimientos");
+    router.back();
   }
 
   async function handleDelete() {
@@ -121,7 +121,7 @@ export function EditarMovimientoForm({
     if (error) { toast.error("No se pudo eliminar el movimiento", { description: error.message }); return; }
     toast.success("Movimiento eliminado");
     router.refresh();
-    router.replace("/movimientos");
+    router.back();
   }
 
   return (

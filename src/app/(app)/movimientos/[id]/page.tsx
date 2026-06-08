@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { EditarMovimientoForm } from "./editar-movimiento-form";
@@ -21,7 +23,12 @@ export default async function MovimientoDetailPage({ params }: { params: Promise
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold tracking-tight">Editar movimiento</h1>
+      <div className="flex items-center gap-2">
+        <Link href="/movimientos" className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted">
+          <ChevronLeft className="size-5" />
+        </Link>
+        <h1 className="text-2xl font-semibold tracking-tight">Editar movimiento</h1>
+      </div>
       <EditarMovimientoForm transaction={tx} accounts={accounts ?? []} categories={categories ?? []} goals={goals ?? []} />
     </div>
   );

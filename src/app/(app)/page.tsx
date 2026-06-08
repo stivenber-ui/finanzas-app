@@ -47,6 +47,7 @@ export default async function DashboardPage() {
     { data: catTxs },
     { data: trendRaw },
     { data: goals },
+    { data: goalContributions },
   ] = await Promise.all([
     supabase.from("account_balances").select("current_balance, type"),
     supabase
@@ -77,6 +78,7 @@ export default async function DashboardPage() {
       .from("goals")
       .select("id, name, target_amount, initial_amount, target_date")
       .eq("status", "activa"),
+    supabase.from("transactions").select("goal_id, amount").not("goal_id", "is", null),
   ]);
 
   const netWorth = (balances ?? []).reduce((sum, a) => sum + Number(a.current_balance), 0);
@@ -115,6 +117,13 @@ export default async function DashboardPage() {
   while (cur <= periodMonth) {
     allMonths.push(trendMap.get(cur) ?? { month: cur, income: 0, expense: 0 });
     cur = addMonths(cur, 1);
+  }
+
+  // Goal contributions from tagged transactions
+  const contributedByGoal = new Map<string, number>();
+  for (const t of goalContributions ?? []) {
+    if (!t.goal_id) continue;
+    contributedByGoal.set(t.goal_id, (contributedByGoal.get(t.goal_id) ?? 0) + Number(t.amount));
   }
 
   // Goals sorted by target_date (nulls last)
@@ -175,7 +184,7 @@ export default async function DashboardPage() {
                   <span className="font-medium">{cat.name}</span>
                   <span className="text-muted-foreground">
                     {currency.format(cat.total)}{" "}
-                    <span className="text-xs">({Math.round((cat.total / monthExpense) * 100)}%)</span>
+                    <span className="text-xs">({monthExpense > 0 ? Math.round((cat.total / monthExpense) * 100) : 0}%)</span>
                   </span>
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -221,7 +230,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
             {sortedGoals.map((goal) => {
-              const current = Number(goal.initial_amount);
+              const current = Number(goal.initial_amount) + (contributedByGoal.get(goal.id) ?? 0);
               const target = Number(goal.target_amount);
               const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
               const remaining = target - current;
@@ -231,8 +240,10 @@ export default async function DashboardPage() {
                 tip = "¡Meta alcanzada! Puedes marcarla como completada.";
               } else if (goal.target_date) {
                 const monthsLeft = diffMonths(periodMonth, goal.target_date.slice(0, 7) + "-01");
-                if (monthsLeft <= 0) {
+                if (monthsLeft < 0) {
                   tip = `Te faltan ${currency.format(remaining)}. La fecha objetivo ya pasó.`;
+                } else if (monthsLeft === 0) {
+                  tip = `Te faltan ${currency.format(remaining)}. ¡Este es el último mes!`;
                 } else {
                   tip = `Te faltan ${currency.format(remaining)}. Para cumplirla necesitas ahorrar ${currency.format(Math.ceil(remaining / monthsLeft))}/mes.`;
                 }

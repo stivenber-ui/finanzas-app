@@ -54,8 +54,8 @@ export function NuevaCuentaForm() {
 
     if (error) { toast.error("No se pudo crear la cuenta", { description: error.message }); return; }
     toast.success("Cuenta creada");
-    router.replace("/cuentas");
     router.refresh();
+    router.replace("/cuentas");
   }
 
   return (

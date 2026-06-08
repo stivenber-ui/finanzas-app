@@ -1,15 +1,23 @@
 const CACHE = "finanzas-v1";
 
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
-  event.waitUntil(caches.open(CACHE).then((c) => c.add("/")));
+  // skipWaiting + initial cache must both finish before activation
+  event.waitUntil(
+    Promise.all([
+      self.skipWaiting(),
+      caches.open(CACHE).then((c) => c.add("/")),
+    ])
+  );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+      )
+      .then(() => self.clients.claim())
   );
 });
 
@@ -22,7 +30,7 @@ self.addEventListener("fetch", (event) => {
   // Never intercept Supabase API calls
   if (url.hostname.includes("supabase")) return;
 
-  // Static assets: cache-first, then cache the response
+  // Static assets (_next/static): cache-first, populate on miss
   if (url.pathname.startsWith("/_next/static/")) {
     event.respondWith(
       caches.match(request).then(
@@ -37,10 +45,13 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Navigation requests: network-first, fall back to cached "/"
+  // Navigation requests: network-first, fall back to cached shell
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(() => caches.match("/") ?? fetch(request))
+      fetch(request).catch(() =>
+        // caches.match returns Promise<Response|undefined>; must .then to unwrap
+        caches.match("/").then((cached) => cached ?? new Response("Offline", { status: 503 }))
+      )
     );
   }
 });

@@ -68,8 +68,8 @@ export function EditarMetaForm({ goal, accounts }: { goal: Goal; accounts: Accou
 
     if (error) { toast.error("No se pudo guardar", { description: error.message }); return; }
     toast.success("Meta actualizada");
-    router.replace("/presupuestos");
     router.refresh();
+    router.replace("/presupuestos");
   }
 
   async function handleDelete() {
@@ -79,8 +79,8 @@ export function EditarMetaForm({ goal, accounts }: { goal: Goal; accounts: Accou
     setDeleting(false);
     if (error) { toast.error("No se pudo eliminar", { description: error.message }); return; }
     toast.success("Meta eliminada");
-    router.replace("/presupuestos");
     router.refresh();
+    router.replace("/presupuestos");
   }
 
   return (
