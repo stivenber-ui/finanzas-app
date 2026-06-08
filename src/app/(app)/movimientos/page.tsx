@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowDownRight, ArrowUpRight, ArrowLeftRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MovimientosFilter } from "./movimientos-filter";
 
 const PAGE_SIZE = 30;
 
@@ -58,13 +60,22 @@ export default async function MovimientosPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { page: pageParam } = await searchParams;
-  const page = Math.max(1, Number(pageParam) || 1);
+  const params = await searchParams;
+  const page = Math.max(1, Number(params.page) || 1);
+  const typeFilter = typeof params.type === "string" ? params.type : "";
+  const accountId = typeof params.account_id === "string" ? params.account_id : "";
+  const q = typeof params.q === "string" ? params.q.trim() : "";
+
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
   const supabase = await createClient();
-  const { data, count } = await supabase
+
+  const [{ data: accounts }] = await Promise.all([
+    supabase.from("accounts").select("id, name").is("archived_at", null).order("sort_order"),
+  ]);
+
+  let query = supabase
     .from("transactions")
     .select(
       "id, type, amount, occurred_on, notes, account:accounts!transactions_account_id_fkey(name), to_account:accounts!transactions_to_account_id_fkey(name), category:categories(name)",
@@ -73,6 +84,12 @@ export default async function MovimientosPage({
     .order("occurred_on", { ascending: false })
     .order("created_at", { ascending: false })
     .range(from, to);
+
+  if (typeFilter) query = query.eq("type", typeFilter as "ingreso" | "gasto" | "transferencia");
+  if (accountId) query = query.or(`account_id.eq.${accountId},to_account_id.eq.${accountId}`);
+  if (q) query = query.ilike("notes", `%${q}%`);
+
+  const { data, count } = await query;
 
   const transactions = (data ?? []).map(normalize);
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
@@ -84,17 +101,27 @@ export default async function MovimientosPage({
     else groups.push({ date: tx.occurred_on, items: [tx] });
   }
 
+  const hasFilters = !!(typeFilter || accountId || q);
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-baseline justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Movimientos</h1>
-        {!!count && <span className="text-sm text-muted-foreground">{count} en total</span>}
+        {!!count && (
+          <span className="text-sm text-muted-foreground">
+            {count} {hasFilters ? "resultado(s)" : "en total"}
+          </span>
+        )}
       </div>
+
+      <Suspense>
+        <MovimientosFilter accounts={accounts ?? []} />
+      </Suspense>
 
       {!transactions.length && (
         <Card>
           <CardContent className="pt-6 text-sm text-muted-foreground">
-            Aún no hay movimientos. Usa el botón + para registrar el primero.
+            {hasFilters ? "Ningún movimiento coincide con los filtros." : "Aún no hay movimientos."}
           </CardContent>
         </Card>
       )}
@@ -115,7 +142,15 @@ export default async function MovimientosPage({
       {totalPages > 1 && (
         <div className="flex items-center justify-between gap-2 pb-2">
           {page > 1 ? (
-            <Button render={<Link href={`/movimientos?page=${page - 1}`} />} variant="outline" size="sm">
+            <Button
+              render={
+                <Link
+                  href={`/movimientos?page=${page - 1}&type=${typeFilter}&account_id=${accountId}&q=${q}`}
+                />
+              }
+              variant="outline"
+              size="sm"
+            >
               Anterior
             </Button>
           ) : (
@@ -127,7 +162,15 @@ export default async function MovimientosPage({
             Página {page} de {totalPages}
           </span>
           {page < totalPages ? (
-            <Button render={<Link href={`/movimientos?page=${page + 1}`} />} variant="outline" size="sm">
+            <Button
+              render={
+                <Link
+                  href={`/movimientos?page=${page + 1}&type=${typeFilter}&account_id=${accountId}&q=${q}`}
+                />
+              }
+              variant="outline"
+              size="sm"
+            >
               Siguiente
             </Button>
           ) : (

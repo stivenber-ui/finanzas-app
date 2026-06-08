@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, CreditCard, PiggyBank, Banknote, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Wallet, CreditCard, PiggyBank, Banknote, TrendingUp, Plus, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const currency = new Intl.NumberFormat("es-CO", {
@@ -44,7 +46,13 @@ export default async function CuentasPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold tracking-tight">Cuentas</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold tracking-tight">Cuentas</h1>
+        <Button render={<Link href="/cuentas/nueva" />} size="sm" variant="outline">
+          <Plus className="size-4" />
+          Nueva
+        </Button>
+      </div>
 
       <Card>
         <CardContent className="flex items-center justify-between pt-6">
@@ -56,7 +64,7 @@ export default async function CuentasPage() {
       {!rows.length && (
         <Card>
           <CardContent className="pt-6 text-sm text-muted-foreground">
-            Aún no tienes cuentas registradas.
+            Aún no tienes cuentas. Crea la primera con el botón &quot;Nueva&quot;.
           </CardContent>
         </Card>
       )}
@@ -66,25 +74,28 @@ export default async function CuentasPage() {
           const Icon = TYPE_ICON[account.type] ?? Wallet;
           const isDebt = account.balance < 0;
           return (
-            <Card key={account.id}>
-              <CardContent className="flex items-center gap-3 pt-6">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                  <Icon className="size-5" />
-                </div>
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <span className="truncate text-sm font-medium">{account.name}</span>
-                  <span className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-                    <Badge variant="secondary" className="font-normal">
-                      {TYPE_LABEL[account.type] ?? account.type}
-                    </Badge>
-                    {account.institution && <span className="truncate">{account.institution}</span>}
+            <Link key={account.id} href={`/cuentas/${account.id}`}>
+              <Card className="transition-colors active:bg-muted/60">
+                <CardContent className="flex items-center gap-3 pt-6">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                    <Icon className="size-5" />
+                  </div>
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="truncate text-sm font-medium">{account.name}</span>
+                    <span className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                      <Badge variant="secondary" className="font-normal">
+                        {TYPE_LABEL[account.type] ?? account.type}
+                      </Badge>
+                      {account.institution && <span className="truncate">{account.institution}</span>}
+                    </span>
+                  </div>
+                  <span className={cn("shrink-0 text-base font-semibold", isDebt && "text-rose-500")}>
+                    {currency.format(account.balance)}
                   </span>
-                </div>
-                <span className={cn("shrink-0 text-base font-semibold", isDebt && "text-rose-500")}>
-                  {currency.format(account.balance)}
-                </span>
-              </CardContent>
-            </Card>
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                </CardContent>
+              </Card>
+            </Link>
           );
         })}
       </div>

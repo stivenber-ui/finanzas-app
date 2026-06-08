@@ -19,6 +19,7 @@ import {
 
 type Account = { id: string; name: string; type: string };
 type Category = { id: string; name: string; kind: "ingreso" | "gasto" };
+type Goal = { id: string; name: string };
 type MovementType = "gasto" | "ingreso" | "transferencia";
 
 function todayLocalISODate() {
@@ -29,9 +30,11 @@ function todayLocalISODate() {
 export function NuevoMovimientoForm({
   accounts,
   categories,
+  goals,
 }: {
   accounts: Account[];
   categories: Category[];
+  goals: Goal[];
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -41,6 +44,7 @@ export function NuevoMovimientoForm({
   const [accountId, setAccountId] = useState("");
   const [toAccountId, setToAccountId] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [goalId, setGoalId] = useState("");
   const [occurredOn, setOccurredOn] = useState(todayLocalISODate());
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -59,6 +63,7 @@ export function NuevoMovimientoForm({
     setType(nextType);
     setCategoryId("");
     setToAccountId("");
+    setGoalId("");
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -85,6 +90,7 @@ export function NuevoMovimientoForm({
       account_id: accountId,
       to_account_id: type === "transferencia" ? toAccountId : null,
       category_id: type === "transferencia" ? null : categoryId || null,
+      goal_id: type !== "transferencia" ? goalId || null : null,
       occurred_on: occurredOn,
       notes: notes.trim() || null,
     });
@@ -170,6 +176,23 @@ export function NuevoMovimientoForm({
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
                     </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {type !== "transferencia" && goals.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <Label>Meta (opcional)</Label>
+              <Select value={goalId || "_none"} onValueChange={(v) => setGoalId(!v || v === "_none" ? "" : v)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sin meta" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Sin meta</SelectItem>
+                  {goals.map((g) => (
+                    <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

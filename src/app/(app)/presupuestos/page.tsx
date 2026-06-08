@@ -1,6 +1,9 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Plus, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const currency = new Intl.NumberFormat("es-CO", {
@@ -54,7 +57,13 @@ export default async function MetasPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold tracking-tight">Metas</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold tracking-tight">Metas</h1>
+        <Button render={<Link href="/presupuestos/nueva" />} size="sm" variant="outline">
+          <Plus className="size-4" />
+          Nueva
+        </Button>
+      </div>
 
       {!rows.length && (
         <Card>
@@ -67,33 +76,38 @@ export default async function MetasPage() {
 
       <div className="flex flex-col gap-3">
         {rows.map((goal) => (
-          <Card key={goal.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle className="text-base">{goal.name}</CardTitle>
-                <Badge variant={STATUS_VARIANT[goal.status] ?? "outline"}>
-                  {STATUS_LABEL[goal.status] ?? goal.status}
-                </Badge>
-              </div>
-              {goal.target_date && <CardDescription>Fecha objetivo: {formatDateOnly(goal.target_date)}</CardDescription>}
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-[width]",
-                    goal.status === "completada" ? "bg-emerald-500" : "bg-primary",
-                  )}
-                  style={{ width: `${Math.round(goal.progress * 100)}%` }}
-                />
-              </div>
-              <div className="flex items-baseline justify-between text-sm">
-                <span className="font-medium">{currency.format(goal.current)}</span>
-                <span className="text-muted-foreground">de {currency.format(goal.target)}</span>
-              </div>
-              <span className="text-xs text-muted-foreground">{Math.round(goal.progress * 100)}% completado</span>
-            </CardContent>
-          </Card>
+          <Link key={goal.id} href={`/presupuestos/${goal.id}`}>
+            <Card className="transition-colors active:bg-muted/60">
+              <CardHeader>
+                <div className="flex items-center justify-between gap-2">
+                  <CardTitle className="text-base">{goal.name}</CardTitle>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant={STATUS_VARIANT[goal.status] ?? "outline"}>
+                      {STATUS_LABEL[goal.status] ?? goal.status}
+                    </Badge>
+                    <ChevronRight className="size-4 text-muted-foreground" />
+                  </div>
+                </div>
+                {goal.target_date && <CardDescription>Fecha objetivo: {formatDateOnly(goal.target_date)}</CardDescription>}
+              </CardHeader>
+              <CardContent className="flex flex-col gap-2">
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-[width]",
+                      goal.status === "completada" ? "bg-emerald-500" : "bg-primary",
+                    )}
+                    style={{ width: `${Math.round(goal.progress * 100)}%` }}
+                  />
+                </div>
+                <div className="flex items-baseline justify-between text-sm">
+                  <span className="font-medium">{currency.format(goal.current)}</span>
+                  <span className="text-muted-foreground">de {currency.format(goal.target)}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">{Math.round(goal.progress * 100)}% completado</span>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
     </div>
