@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Wallet, CreditCard, PiggyBank, Banknote, TrendingUp, Plus, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Plus } from "lucide-react";
+import { CuentasList } from "./cuentas-list";
 
 const currency = new Intl.NumberFormat("es-CO", {
   style: "currency",
@@ -12,29 +11,13 @@ const currency = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 0,
 });
 
-const TYPE_LABEL: Record<string, string> = {
-  debito: "Cuenta de débito",
-  ahorro: "Ahorros",
-  credito: "Tarjeta de crédito",
-  efectivo: "Efectivo",
-  inversion: "Inversión",
-};
-
-const TYPE_ICON: Record<string, typeof Wallet> = {
-  debito: Wallet,
-  ahorro: PiggyBank,
-  credito: CreditCard,
-  efectivo: Banknote,
-  inversion: TrendingUp,
-};
-
 export default async function CuentasPage() {
   const supabase = await createClient();
 
   const [{ data: accounts }, { data: balances }] = await Promise.all([
     supabase
       .from("accounts")
-      .select("id, name, type, institution, archived_at")
+      .select("id, name, type, institution, archived_at, sort_order")
       .order("sort_order"),
     supabase.from("account_balances").select("id, current_balance"),
   ]);
@@ -43,7 +26,6 @@ export default async function CuentasPage() {
   const allRows = (accounts ?? []).map((a) => ({ ...a, balance: balanceById.get(a.id) ?? 0 }));
   const activeRows = allRows.filter((a) => !a.archived_at);
   const archivedRows = allRows.filter((a) => !!a.archived_at);
-  // Net worth from ALL balances matches dashboard
   const netWorth = (balances ?? []).reduce((sum, b) => sum + Number(b.current_balance), 0);
 
   return (
@@ -71,60 +53,12 @@ export default async function CuentasPage() {
         </Card>
       )}
 
-      <div className="flex flex-col gap-3">
-        {activeRows.map((account) => (
-          <AccountRow key={account.id} account={account} />
-        ))}
-      </div>
-
-      {archivedRows.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <p className="px-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">Archivadas</p>
-          {archivedRows.map((account) => (
-            <AccountRow key={account.id} account={account} muted />
-          ))}
-        </div>
-      )}
+      <CuentasList active={activeRows} archived={archivedRows} />
 
       <p className="px-1 text-xs text-muted-foreground">
         Las tarjetas de crédito muestran el saldo como deuda (en rojo): un valor negativo significa que debes ese
         monto.
       </p>
     </div>
-  );
-}
-
-function AccountRow({
-  account,
-  muted = false,
-}: {
-  account: { id: string; name: string; type: string; institution: string | null; balance: number };
-  muted?: boolean;
-}) {
-  const Icon = TYPE_ICON[account.type] ?? Wallet;
-  const isDebt = account.balance < 0;
-  return (
-    <Link href={`/cuentas/${account.id}`}>
-      <Card className={cn("transition-colors active:bg-muted/60", muted && "opacity-60")}>
-        <CardContent className="flex items-center gap-3 pt-6">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-            <Icon className="size-5" />
-          </div>
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <span className="truncate text-sm font-medium">{account.name}</span>
-            <span className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-              <Badge variant="secondary" className="font-normal">
-                {TYPE_LABEL[account.type] ?? account.type}
-              </Badge>
-              {account.institution && <span className="truncate">{account.institution}</span>}
-            </span>
-          </div>
-          <span className={cn("shrink-0 text-base font-semibold", isDebt && "text-rose-500")}>
-            {currency.format(account.balance)}
-          </span>
-          <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-        </CardContent>
-      </Card>
-    </Link>
   );
 }
