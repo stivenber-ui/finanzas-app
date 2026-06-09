@@ -11,12 +11,15 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+const amountFormatter = new Intl.NumberFormat("es-CO");
+
 type Category = {
   id: string;
   name: string;
   kind: string;
   sort_order: number;
   archived_at: string | null;
+  monthly_budget: number | null;
 };
 
 export function EditarCategoriaForm({ category }: { category: Category }) {
@@ -24,6 +27,9 @@ export function EditarCategoriaForm({ category }: { category: Category }) {
   const supabase = createClient();
 
   const [name, setName] = useState(category.name);
+  const [budget, setBudget] = useState(
+    category.monthly_budget != null ? amountFormatter.format(Number(category.monthly_budget)) : "",
+  );
   const [loading, setLoading] = useState(false);
   const [archiving, setArchiving] = useState(false);
 
@@ -32,9 +38,12 @@ export function EditarCategoriaForm({ category }: { category: Category }) {
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setLoading(true);
+    const numericBudget = budget.trim()
+      ? Number(budget.replace(/\./g, "").replace(",", ".")) || null
+      : null;
     const { error } = await supabase
       .from("categories")
-      .update({ name: name.trim() })
+      .update({ name: name.trim(), monthly_budget: numericBudget })
       .eq("id", category.id);
     setLoading(false);
 
@@ -86,6 +95,22 @@ export function EditarCategoriaForm({ category }: { category: Category }) {
             <Label htmlFor="name">Nombre</Label>
             <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} />
           </div>
+
+          {category.kind === "gasto" && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="budget">Presupuesto mensual (opcional)</Label>
+              <Input
+                id="budget"
+                inputMode="decimal"
+                placeholder="Ej. 500.000"
+                value={budget}
+                onChange={(e) => setBudget(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Se mostrará como alerta cuando superes este monto en el mes.
+              </p>
+            </div>
+          )}
 
           <div className="flex flex-col gap-2 pt-2">
             <Button type="submit" size="lg" disabled={loading || archiving}>

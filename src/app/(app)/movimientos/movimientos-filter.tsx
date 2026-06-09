@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useTransition } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -35,6 +36,8 @@ export function MovimientosFilter({ accounts }: { accounts: Account[] }) {
   const q = sp.get("q") ?? "";
   const type = sp.get("type") ?? "";
   const accountId = sp.get("account_id") ?? "";
+  const dateFrom = sp.get("date_from") ?? "";
+  const dateTo = sp.get("date_to") ?? "";
 
   const typeOptions = [
     { value: "", label: "Todos" },
@@ -62,7 +65,11 @@ export function MovimientosFilter({ accounts }: { accounts: Account[] }) {
         />
       </div>
       <div className="flex gap-2">
-        <Select value={type || "_all"} items={typeOptions.map((o) => ({ value: o.value || "_all", label: o.label }))} onValueChange={(v) => push({ type: !v || v === "_all" ? "" : v })}>
+        <Select
+          value={type || "_all"}
+          items={typeOptions.map((o) => ({ value: o.value || "_all", label: o.label }))}
+          onValueChange={(v) => push({ type: !v || v === "_all" ? "" : v })}
+        >
           <SelectTrigger className="flex-1">
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
@@ -75,7 +82,11 @@ export function MovimientosFilter({ accounts }: { accounts: Account[] }) {
           </SelectContent>
         </Select>
         {accounts.length > 1 && (
-          <Select value={accountId || "_all"} items={[{ value: "_all", label: "Todas las cuentas" }, ...accounts.map((a) => ({ value: a.id, label: a.name }))]} onValueChange={(v) => push({ account_id: !v || v === "_all" ? "" : v })}>
+          <Select
+            value={accountId || "_all"}
+            items={[{ value: "_all", label: "Todas las cuentas" }, ...accounts.map((a) => ({ value: a.id, label: a.name }))]}
+            onValueChange={(v) => push({ account_id: !v || v === "_all" ? "" : v })}
+          >
             <SelectTrigger className="flex-1">
               <SelectValue placeholder="Cuenta" />
             </SelectTrigger>
@@ -89,6 +100,26 @@ export function MovimientosFilter({ accounts }: { accounts: Account[] }) {
             </SelectContent>
           </Select>
         )}
+      </div>
+      <div className="flex gap-2">
+        <div className="flex flex-1 flex-col gap-1">
+          <Label className="text-xs text-muted-foreground">Desde</Label>
+          <Input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => push({ date_from: e.target.value })}
+            className="text-sm"
+          />
+        </div>
+        <div className="flex flex-1 flex-col gap-1">
+          <Label className="text-xs text-muted-foreground">Hasta</Label>
+          <Input
+            type="date"
+            value={dateTo}
+            onChange={(e) => push({ date_to: e.target.value })}
+            className="text-sm"
+          />
+        </div>
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ export default async function EditarCategoriaPage({ params }: { params: Promise<
 
   const { data: category } = await supabase
     .from("categories")
-    .select("id, name, kind, sort_order, archived_at")
+    .select("id, name, kind, sort_order, archived_at, monthly_budget")
     .eq("id", id)
     .maybeSingle();
 

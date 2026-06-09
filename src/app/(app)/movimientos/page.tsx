@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Tag } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Tag, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MovimientosFilter } from "./movimientos-filter";
 
@@ -55,6 +55,17 @@ function normalize(tx: RawTx): Tx {
   return { ...tx, account: one(tx.account), to_account: one(tx.to_account), category: one(tx.category) };
 }
 
+function buildExportUrl(type: string, accountId: string, q: string, dateFrom: string, dateTo: string) {
+  const params = new URLSearchParams();
+  if (type) params.set("type", type);
+  if (accountId) params.set("account_id", accountId);
+  if (q) params.set("q", q);
+  if (dateFrom) params.set("date_from", dateFrom);
+  if (dateTo) params.set("date_to", dateTo);
+  const qs = params.toString();
+  return qs ? `/api/export?${qs}` : "/api/export";
+}
+
 export default async function MovimientosPage({
   searchParams,
 }: {
@@ -65,6 +76,8 @@ export default async function MovimientosPage({
   const typeFilter = typeof params.type === "string" ? params.type : "";
   const accountId = typeof params.account_id === "string" ? params.account_id : "";
   const q = typeof params.q === "string" ? params.q.trim() : "";
+  const dateFrom = typeof params.date_from === "string" ? params.date_from : "";
+  const dateTo = typeof params.date_to === "string" ? params.date_to : "";
 
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
@@ -88,6 +101,8 @@ export default async function MovimientosPage({
   if (typeFilter) query = query.eq("type", typeFilter as "ingreso" | "gasto" | "transferencia");
   if (accountId) query = query.or(`account_id.eq.${accountId},to_account_id.eq.${accountId}`);
   if (q) query = query.ilike("notes", `%${q}%`);
+  if (dateFrom) query = query.gte("occurred_on", dateFrom);
+  if (dateTo) query = query.lte("occurred_on", dateTo);
 
   const { data, count } = await query;
 
@@ -101,18 +116,21 @@ export default async function MovimientosPage({
     else groups.push({ date: tx.occurred_on, items: [tx] });
   }
 
-  const hasFilters = !!(typeFilter || accountId || q);
+  const hasFilters = !!(typeFilter || accountId || q || dateFrom || dateTo);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold tracking-tight">Movimientos</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {!!count && (
             <span className="text-sm text-muted-foreground">
               {count} {hasFilters ? "resultado(s)" : "en total"}
             </span>
           )}
+          <Button render={<Link href={buildExportUrl(typeFilter, accountId, q, dateFrom, dateTo)} />} size="sm" variant="ghost" className="text-muted-foreground" title="Descargar CSV">
+            <Download className="size-4" />
+          </Button>
           <Button render={<Link href="/categorias" />} size="sm" variant="ghost" className="text-muted-foreground">
             <Tag className="size-4" />
           </Button>
@@ -147,7 +165,7 @@ export default async function MovimientosPage({
       {totalPages > 1 && (
         <div className="flex items-center justify-between gap-2 pb-2">
           {page > 1 ? (
-            <Button render={<Link href={pageHref(page - 1, typeFilter, accountId, q)} />} variant="outline" size="sm">
+            <Button render={<Link href={pageHref(page - 1, typeFilter, accountId, q, dateFrom, dateTo)} />} variant="outline" size="sm">
               Anterior
             </Button>
           ) : (
@@ -155,7 +173,7 @@ export default async function MovimientosPage({
           )}
           <span className="text-sm text-muted-foreground">Página {page} de {totalPages}</span>
           {page < totalPages ? (
-            <Button render={<Link href={pageHref(page + 1, typeFilter, accountId, q)} />} variant="outline" size="sm">
+            <Button render={<Link href={pageHref(page + 1, typeFilter, accountId, q, dateFrom, dateTo)} />} variant="outline" size="sm">
               Siguiente
             </Button>
           ) : (
@@ -167,12 +185,14 @@ export default async function MovimientosPage({
   );
 }
 
-function pageHref(p: number, type: string, accountId: string, q: string) {
+function pageHref(p: number, type: string, accountId: string, q: string, dateFrom: string, dateTo: string) {
   const params = new URLSearchParams();
   if (p > 1) params.set("page", String(p));
   if (type) params.set("type", type);
   if (accountId) params.set("account_id", accountId);
   if (q) params.set("q", q);
+  if (dateFrom) params.set("date_from", dateFrom);
+  if (dateTo) params.set("date_to", dateTo);
   const qs = params.toString();
   return qs ? `/movimientos?${qs}` : "/movimientos";
 }

@@ -32,6 +32,23 @@ const TYPE_ICON: Record<string, typeof Wallet> = {
   inversion: TrendingUp,
 };
 
+// Brand colors per institution (bg, text)
+const BRAND_COLORS: Record<string, { bg: string; text: string }> = {
+  nu:          { bg: "#820AD1", text: "#fff" },
+  nequi:       { bg: "#E6007E", text: "#fff" },
+  bancolombia: { bg: "#FFDB00", text: "#000" },
+  davivienda:  { bg: "#E2001A", text: "#fff" },
+  bbva:        { bg: "#004481", text: "#fff" },
+  falabella:   { bg: "#016940", text: "#fff" },
+  rappipay:    { bg: "#FF441F", text: "#fff" },
+};
+
+function brandColors(institution: string | null) {
+  if (!institution) return null;
+  const key = institution.toLowerCase().replace(/\s+/g, "");
+  return BRAND_COLORS[key] ?? null;
+}
+
 type AccountRow = {
   id: string;
   name: string;
@@ -167,6 +184,7 @@ function AccountRow({
 }) {
   const Icon = TYPE_ICON[account.type] ?? Wallet;
   const isDebt = account.balance < 0;
+  const brand = brandColors(account.institution);
 
   const inner = (
     <Card className={cn("transition-colors", !reorderMode && "active:bg-muted/60", muted && "opacity-60")}>
@@ -193,7 +211,10 @@ function AccountRow({
             </button>
           </div>
         )}
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <div
+          className={cn("flex size-10 shrink-0 items-center justify-center rounded-full", !brand && "bg-muted text-muted-foreground")}
+          style={brand ? { backgroundColor: brand.bg, color: brand.text } : undefined}
+        >
           <Icon className="size-5" />
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
