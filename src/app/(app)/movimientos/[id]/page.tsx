@@ -14,7 +14,7 @@ export default async function MovimientoDetailPage({ params }: { params: Promise
       .select("id, type, amount, occurred_on, notes, account_id, to_account_id, category_id, goal_id")
       .eq("id", id)
       .maybeSingle(),
-    supabase.from("accounts").select("id, name, type").is("archived_at", null).order("sort_order"),
+    supabase.from("accounts").select("id, name, type, archived_at").order("sort_order"),
     supabase.from("categories").select("id, name, kind").is("archived_at", null).order("sort_order"),
     supabase.from("goals").select("id, name").eq("status", "activa").order("created_at"),
   ]);

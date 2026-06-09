@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowDownRight, ArrowUpRight, ArrowLeftRight } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MovimientosFilter } from "./movimientos-filter";
 
@@ -105,13 +105,18 @@ export default async function MovimientosPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold tracking-tight">Movimientos</h1>
-        {!!count && (
-          <span className="text-sm text-muted-foreground">
-            {count} {hasFilters ? "resultado(s)" : "en total"}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {!!count && (
+            <span className="text-sm text-muted-foreground">
+              {count} {hasFilters ? "resultado(s)" : "en total"}
+            </span>
+          )}
+          <Button render={<Link href="/categorias" />} size="sm" variant="ghost" className="text-muted-foreground">
+            <Tag className="size-4" />
+          </Button>
+        </div>
       </div>
 
       <Suspense>
@@ -142,46 +147,34 @@ export default async function MovimientosPage({
       {totalPages > 1 && (
         <div className="flex items-center justify-between gap-2 pb-2">
           {page > 1 ? (
-            <Button
-              render={
-                <Link
-                  href={`/movimientos?page=${page - 1}&type=${typeFilter}&account_id=${accountId}&q=${q}`}
-                />
-              }
-              variant="outline"
-              size="sm"
-            >
+            <Button render={<Link href={pageHref(page - 1, typeFilter, accountId, q)} />} variant="outline" size="sm">
               Anterior
             </Button>
           ) : (
-            <Button variant="outline" size="sm" disabled>
-              Anterior
-            </Button>
+            <Button variant="outline" size="sm" disabled>Anterior</Button>
           )}
-          <span className="text-sm text-muted-foreground">
-            Página {page} de {totalPages}
-          </span>
+          <span className="text-sm text-muted-foreground">Página {page} de {totalPages}</span>
           {page < totalPages ? (
-            <Button
-              render={
-                <Link
-                  href={`/movimientos?page=${page + 1}&type=${typeFilter}&account_id=${accountId}&q=${q}`}
-                />
-              }
-              variant="outline"
-              size="sm"
-            >
+            <Button render={<Link href={pageHref(page + 1, typeFilter, accountId, q)} />} variant="outline" size="sm">
               Siguiente
             </Button>
           ) : (
-            <Button variant="outline" size="sm" disabled>
-              Siguiente
-            </Button>
+            <Button variant="outline" size="sm" disabled>Siguiente</Button>
           )}
         </div>
       )}
     </div>
   );
+}
+
+function pageHref(p: number, type: string, accountId: string, q: string) {
+  const params = new URLSearchParams();
+  if (p > 1) params.set("page", String(p));
+  if (type) params.set("type", type);
+  if (accountId) params.set("account_id", accountId);
+  if (q) params.set("q", q);
+  const qs = params.toString();
+  return qs ? `/movimientos?${qs}` : "/movimientos";
 }
 
 function MovimientoRow({ tx }: { tx: Tx }) {

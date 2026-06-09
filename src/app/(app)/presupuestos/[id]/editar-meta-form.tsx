@@ -28,6 +28,8 @@ type Goal = {
   status: string;
 };
 
+const amountFormatter = new Intl.NumberFormat("es-CO");
+
 const STATUS_OPTIONS = [
   { value: "activa", label: "Activa" },
   { value: "completada", label: "Completada" },
@@ -39,8 +41,8 @@ export function EditarMetaForm({ goal, accounts }: { goal: Goal; accounts: Accou
   const supabase = createClient();
 
   const [name, setName] = useState(goal.name);
-  const [targetAmount, setTargetAmount] = useState(String(Number(goal.target_amount)));
-  const [initialAmount, setInitialAmount] = useState(String(Number(goal.initial_amount)));
+  const [targetAmount, setTargetAmount] = useState(amountFormatter.format(Number(goal.target_amount)));
+  const [initialAmount, setInitialAmount] = useState(amountFormatter.format(Number(goal.initial_amount)));
   const [targetDate, setTargetDate] = useState(goal.target_date?.slice(0, 10) ?? "");
   const [accountId, setAccountId] = useState(goal.account_id ?? "");
   const [status, setStatus] = useState(goal.status);

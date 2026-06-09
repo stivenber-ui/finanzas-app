@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type Account = { id: string; name: string; type: string };
+type Account = { id: string; name: string; type: string; archived_at?: string | null };
 type Category = { id: string; name: string; kind: "ingreso" | "gasto" };
 type Goal = { id: string; name: string };
 type MovementType = "gasto" | "ingreso" | "transferencia";
@@ -68,8 +68,14 @@ export function EditarMovimientoForm({
   );
   const destinationAccounts = useMemo(() => accounts.filter((a) => a.id !== accountId), [accounts, accountId]);
 
-  const accountItems = useMemo(() => accounts.map((a) => ({ value: a.id, label: a.name })), [accounts]);
-  const destItems = useMemo(() => destinationAccounts.map((a) => ({ value: a.id, label: a.name })), [destinationAccounts]);
+  const accountItems = useMemo(
+    () => accounts.map((a) => ({ value: a.id, label: a.archived_at ? `${a.name} (archivada)` : a.name })),
+    [accounts],
+  );
+  const destItems = useMemo(
+    () => destinationAccounts.map((a) => ({ value: a.id, label: a.archived_at ? `${a.name} (archivada)` : a.name })),
+    [destinationAccounts],
+  );
   const categoryItems = useMemo(() => filteredCategories.map((c) => ({ value: c.id, label: c.name })), [filteredCategories]);
   const goalItems = useMemo(
     () => [{ value: GOAL_NONE, label: "Sin meta" }, ...goals.map((g) => ({ value: g.id, label: g.name }))],
@@ -149,7 +155,9 @@ export function EditarMovimientoForm({
               </SelectTrigger>
               <SelectContent>
                 {accounts.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.archived_at ? `${a.name} (archivada)` : a.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -164,7 +172,9 @@ export function EditarMovimientoForm({
                 </SelectTrigger>
                 <SelectContent>
                   {destinationAccounts.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.archived_at ? `${a.name} (archivada)` : a.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
