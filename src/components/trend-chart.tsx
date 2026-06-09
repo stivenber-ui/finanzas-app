@@ -62,43 +62,70 @@ function CategoryRanking({ categoryData, topCategories }: {
   categoryData: CatMonthEntry[];
   topCategories: string[];
 }) {
-  const totals = topCategories
+  const [selectedIdx, setSelectedIdx] = useState(categoryData.length - 1);
+  const month = categoryData[selectedIdx];
+
+  const rows = topCategories
     .map((cat, i) => ({
       name: cat,
-      total: categoryData.reduce((sum, m) => sum + Number(m[cat] ?? 0), 0),
+      total: Number(month?.[cat] ?? 0),
       color: CAT_COLORS[i % CAT_COLORS.length],
     }))
     .filter((c) => c.total > 0)
     .sort((a, b) => b.total - a.total);
 
-  const max = totals[0]?.total ?? 1;
-  const grandTotal = totals.reduce((s, c) => s + c.total, 0);
+  const max = rows[0]?.total ?? 1;
+  const grandTotal = rows.reduce((s, c) => s + c.total, 0);
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs text-muted-foreground">
-        Total 6 meses · {fullCurrency.format(grandTotal)}
-      </p>
-      {totals.map((cat) => (
-        <div key={cat.name} className="flex flex-col gap-1">
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: cat.color }} />
-              <span className="truncate font-medium">{cat.name}</span>
+      {/* Month selector */}
+      <div className="flex gap-1 overflow-x-auto pb-0.5 no-scrollbar">
+        {categoryData.map((m, i) => (
+          <button
+            key={m.label}
+            type="button"
+            onClick={() => setSelectedIdx(i)}
+            className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              i === selectedIdx
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {rows.length === 0 ? (
+        <p className="py-4 text-center text-sm text-muted-foreground">Sin gastos este mes</p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          <p className="text-xs text-muted-foreground">
+            {month?.label} · total {fullCurrency.format(grandTotal)}
+          </p>
+          {rows.map((cat) => (
+            <div key={cat.name} className="flex flex-col gap-1">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: cat.color }} />
+                  <span className="truncate font-medium">{cat.name}</span>
+                </div>
+                <div className="ml-2 flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                  <span>{grandTotal > 0 ? Math.round((cat.total / grandTotal) * 100) : 0}%</span>
+                  <span className="font-medium tabular-nums">{fullCurrency.format(cat.total)}</span>
+                </div>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{ width: `${Math.round((cat.total / max) * 100)}%`, backgroundColor: cat.color }}
+                />
+              </div>
             </div>
-            <div className="ml-2 flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-              <span>{grandTotal > 0 ? Math.round((cat.total / grandTotal) * 100) : 0}%</span>
-              <span className="font-medium tabular-nums">{fullCurrency.format(cat.total)}</span>
-            </div>
-          </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full transition-all"
-              style={{ width: `${Math.round((cat.total / max) * 100)}%`, backgroundColor: cat.color }}
-            />
-          </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }
