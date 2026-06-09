@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Target, ChevronRight, RefreshCw, BarChart2 } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Target, ChevronRight, RefreshCw, BarChart2, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TrendChart } from "@/components/trend-chart";
 import { CircleProgress } from "@/components/circle-progress";
@@ -173,11 +173,12 @@ export default async function DashboardPage() {
       {savingsRate !== null && (
         <Card>
           <CardContent className="flex items-center justify-between pt-4">
-            <div>
+            <div className="flex flex-col gap-0.5">
               <p className="text-sm font-medium">Tasa de ahorro este mes</p>
               <p className="text-xs text-muted-foreground">
-                {savingsRate >= 20 ? "Excelente ritmo de ahorro" : savingsRate >= 10 ? "Buen ritmo de ahorro" : savingsRate >= 0 ? "Margen de mejora" : "Gastaste más de lo que ingresaste"}
+                {savingsRate >= 20 ? "Excelente ritmo" : savingsRate >= 10 ? "Buen ritmo" : savingsRate >= 0 ? "Margen de mejora" : "Gastos > ingresos"}
               </p>
+              <p className="text-xs text-muted-foreground">(Ingresos − Gastos) ÷ Ingresos</p>
             </div>
             <div className="flex flex-col items-center">
               <CircleProgress pct={Math.max(0, savingsRate)} size={64} stroke={6} color={savingsRate >= 20 ? "#10b981" : savingsRate >= 10 ? "#f59e0b" : "#f43f5e"} />
@@ -282,6 +283,19 @@ export default async function DashboardPage() {
               <div className="min-w-0">
                 <p className="text-sm font-medium">Resumen</p>
                 <p className="text-xs text-muted-foreground">Mensual</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/presupuesto">
+          <Card className="transition-colors active:bg-muted/60">
+            <CardContent className="flex items-center gap-3 pt-4 pb-4">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <Wallet className="size-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium">Presupuesto</p>
+                <p className="text-xs text-muted-foreground">Metas y límites</p>
               </div>
             </CardContent>
           </Card>

@@ -9,7 +9,7 @@ const links = [
   { href: "/", label: "Inicio", icon: LayoutGrid },
   { href: "/movimientos", label: "Movimientos", icon: ArrowLeftRight },
   { href: "/cuentas", label: "Cuentas", icon: Wallet },
-  { href: "/presupuestos", label: "Metas", icon: PiggyBank },
+  { href: "/presupuesto", label: "Presupuesto", icon: PiggyBank },
 ];
 
 export function BottomNav() {
