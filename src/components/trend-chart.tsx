@@ -28,7 +28,7 @@ function compactCOP(v: number): string {
   return `$${v}`;
 }
 
-const CAT_COLORS = ["#f43f5e", "#fb923c", "#facc15", "#34d399", "#60a5fa", "#a78bfa", "#94a3b8"];
+const CAT_COLORS = ["#f43f5e", "#fb923c", "#facc15", "#34d399", "#60a5fa", "#a78bfa", "#f472b6", "#2dd4bf", "#fb7185", "#fbbf24", "#4ade80", "#818cf8"];
 
 function TrendTooltip({ active, payload, label, isDark }: { active?: boolean; payload?: { value: number; name: string; color?: string }[]; label?: string; isDark: boolean }) {
   if (!active || !payload?.length) return null;
@@ -109,7 +109,7 @@ export function TrendChart({
             <YAxis tickFormatter={compactCOP} tick={{ fontSize: 11, fill: textColor }} axisLine={false} tickLine={false} width={48} />
             <Tooltip content={<TrendTooltip isDark={isDark} />} cursor={{ fill: cursorColor }} />
             <Legend formatter={(value) => <span style={{ fontSize: 11, color: textColor }}>{value}</span>} />
-            {[...topCategories, ...(categoryData.some((d) => d["Otros"]) ? ["Otros"] : [])].map((cat, i) => (
+            {topCategories.map((cat, i) => (
               <Bar key={cat} dataKey={cat} stackId="a" fill={CAT_COLORS[i % CAT_COLORS.length]} radius={i === topCategories.length - 1 ? [3, 3, 0, 0] : [0, 0, 0, 0]} maxBarSize={36} />
             ))}
           </BarChart>

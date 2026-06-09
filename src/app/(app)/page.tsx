@@ -109,17 +109,11 @@ export default async function DashboardPage() {
   for (const [, m] of catTrendMap) {
     for (const [cat, amt] of m) totalByCategory.set(cat, (totalByCategory.get(cat) ?? 0) + amt);
   }
-  const topCategories = [...totalByCategory.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name]) => name);
+  const topCategories = [...totalByCategory.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name);
   const categoryData: { label: string; [cat: string]: string | number }[] = allMonths.map((m) => {
     const monthMap = catTrendMap.get(m.month) ?? new Map();
     const entry: { label: string; [cat: string]: string | number } = { label: m.label };
-    let others = 0;
-    for (const [cat, amt] of monthMap) {
-      if (topCategories.includes(cat)) entry[cat] = amt;
-      else others += amt;
-    }
-    for (const cat of topCategories) if (!(cat in entry)) entry[cat] = 0;
-    if (others > 0) entry["Otros"] = others;
+    for (const cat of topCategories) entry[cat] = monthMap.get(cat) ?? 0;
     return entry;
   });
 
