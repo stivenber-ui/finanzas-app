@@ -50,6 +50,7 @@ export default async function DashboardPage() {
     { data: trendRaw },
     { data: goals },
     { data: goalContributions },
+    { data: catTrendTxs },
   ] = await Promise.all([
     supabase.from("account_balances").select("current_balance, type"),
     supabase.from("monthly_category_totals").select("type, total_amount").eq("period_month", periodMonth).in("type", ["ingreso", "gasto"]),
@@ -58,6 +59,7 @@ export default async function DashboardPage() {
     supabase.from("monthly_category_totals").select("period_month, type, total_amount").in("type", ["ingreso", "gasto"]).gte("period_month", sixMonthsAgo).lte("period_month", periodMonth).order("period_month", { ascending: true }),
     supabase.from("goals").select("id, name, target_amount, initial_amount, target_date").eq("status", "activa"),
     supabase.from("transactions").select("goal_id, amount").not("goal_id", "is", null),
+    supabase.from("transactions").select("occurred_on, amount, categories(name)").eq("type", "gasto").gte("occurred_on", sixMonthsAgo).lt("occurred_on", nextMonthStart),
   ]);
 
   const netWorth = (balances ?? []).reduce((sum, a) => sum + Number(a.current_balance), 0);
@@ -92,6 +94,34 @@ export default async function DashboardPage() {
     allMonths.push({ month: cur, label: monthLabel(cur), ...e });
     cur = addMonths(cur, 1);
   }
+
+  // Category trend (6 months, for stacked chart)
+  const catTrendMap = new Map<string, Map<string, number>>();
+  for (const tx of catTrendTxs ?? []) {
+    const monthKey = tx.occurred_on.slice(0, 7) + "-01";
+    const cats = tx.categories as { name: string } | { name: string }[] | null;
+    const catName = Array.isArray(cats) ? (cats[0]?.name ?? "Sin categoría") : (cats?.name ?? "Sin categoría");
+    if (!catTrendMap.has(monthKey)) catTrendMap.set(monthKey, new Map());
+    const m = catTrendMap.get(monthKey)!;
+    m.set(catName, (m.get(catName) ?? 0) + Number(tx.amount));
+  }
+  const totalByCategory = new Map<string, number>();
+  for (const [, m] of catTrendMap) {
+    for (const [cat, amt] of m) totalByCategory.set(cat, (totalByCategory.get(cat) ?? 0) + amt);
+  }
+  const topCategories = [...totalByCategory.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name]) => name);
+  const categoryData: { label: string; [cat: string]: string | number }[] = allMonths.map((m) => {
+    const monthMap = catTrendMap.get(m.month) ?? new Map();
+    const entry: { label: string; [cat: string]: string | number } = { label: m.label };
+    let others = 0;
+    for (const [cat, amt] of monthMap) {
+      if (topCategories.includes(cat)) entry[cat] = amt;
+      else others += amt;
+    }
+    for (const cat of topCategories) if (!(cat in entry)) entry[cat] = 0;
+    if (others > 0) entry["Otros"] = others;
+    return entry;
+  });
 
   // Goal contributions
   const contributedByGoal = new Map<string, number>();
@@ -197,7 +227,7 @@ export default async function DashboardPage() {
           </Button>
         </CardHeader>
         <CardContent className="px-2 pb-4">
-          <TrendChart data={allMonths} />
+          <TrendChart data={allMonths} categoryData={categoryData} topCategories={topCategories} />
         </CardContent>
       </Card>
 
