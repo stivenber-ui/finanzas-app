@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Target, ChevronRight, RefreshCw, BarChart2, Wallet, TrendingUp, TrendingDown, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -250,11 +250,13 @@ export default async function DashboardPage() {
 
       {/* Trend chart */}
       <Card>
-        <CardHeader className="flex-row items-center justify-between pb-2">
+        <CardHeader className="pb-2">
           <CardTitle className="text-base">Tendencia 6 meses</CardTitle>
-          <Button render={<Link href="/resumen" />} variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground">
-            Ver resumen <ChevronRight className="ml-0.5 size-3" />
-          </Button>
+          <CardAction>
+            <Button render={<Link href="/resumen" />} variant="ghost" size="sm" className="text-xs text-muted-foreground">
+              Ver resumen <ChevronRight className="ml-0.5 size-3" />
+            </Button>
+          </CardAction>
         </CardHeader>
         <CardContent className="px-2 pb-4">
           <TrendChart data={allMonths} categoryData={categoryData} topCategories={topCategories} />
@@ -343,12 +345,14 @@ export default async function DashboardPage() {
 
       {/* Recent transactions */}
       <Card>
-        <CardHeader className="flex-row items-center justify-between pb-2">
+        <CardHeader className="pb-2">
           <CardTitle className="text-base">Movimientos recientes</CardTitle>
           {!!recent?.length && (
-            <Button render={<Link href="/movimientos" />} variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground">
-              Ver todos <ChevronRight className="ml-0.5 size-3" />
-            </Button>
+            <CardAction>
+              <Button render={<Link href="/movimientos" />} variant="ghost" size="sm" className="text-xs text-muted-foreground">
+                Ver todos <ChevronRight className="ml-0.5 size-3" />
+              </Button>
+            </CardAction>
           )}
         </CardHeader>
         {!recent?.length ? (

@@ -40,7 +40,8 @@ function endOfMonth(ym: string) {
 
 function monthTitle(ym: string) {
   const [y, m] = ym.split("-").map(Number);
-  return new Intl.DateTimeFormat("es-CO", { month: "long", year: "numeric" }).format(new Date(y, m - 1, 1));
+  const label = new Intl.DateTimeFormat("es-CO", { month: "long", year: "numeric" }).format(new Date(y, m - 1, 1));
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 function daysInMonth(ym: string) {
@@ -137,7 +138,7 @@ export default async function ResumenPage({
       <div className="flex items-center justify-between gap-2">
         <div>
           <p className="text-xs font-medium text-muted-foreground">Resumen mensual</p>
-          <h1 className="text-2xl font-semibold tracking-tight capitalize">{monthTitle(month)}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{monthTitle(month)}</h1>
         </div>
         <div className="flex items-center gap-1 rounded-full bg-muted p-1">
           <Link

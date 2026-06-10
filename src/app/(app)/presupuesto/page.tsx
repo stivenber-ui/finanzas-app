@@ -19,9 +19,10 @@ export default async function PresupuestoPage() {
   const periodMonth = startOfMonth(new Date());
   const nextMonthStart = addMonths(periodMonth, 1);
 
-  const monthLabel = new Intl.DateTimeFormat("es-CO", { month: "long", year: "numeric" }).format(
+  const rawMonthLabel = new Intl.DateTimeFormat("es-CO", { month: "long", year: "numeric" }).format(
     new Date(Number(periodMonth.slice(0, 4)), Number(periodMonth.slice(5, 7)) - 1, 1)
   );
+  const monthLabel = rawMonthLabel.charAt(0).toUpperCase() + rawMonthLabel.slice(1);
 
   const [
     { data: totals },
@@ -75,7 +76,7 @@ export default async function PresupuestoPage() {
     <div className="flex flex-col gap-4">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Presupuesto</h1>
-        <p className="text-sm text-muted-foreground capitalize">{monthLabel}</p>
+        <p className="text-sm text-muted-foreground">{monthLabel}</p>
       </div>
 
       <SavingsGoalCard

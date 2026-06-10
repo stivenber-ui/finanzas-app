@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Pencil, Check, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CircleProgress } from "@/components/circle-progress";
 
@@ -50,12 +50,14 @@ export function SavingsGoalCard({
 
   return (
     <Card>
-      <CardHeader className="pb-2 flex-row items-center justify-between">
+      <CardHeader className="pb-2">
         <CardTitle className="text-base">Meta de ahorro mensual</CardTitle>
         {!editing && (
-          <Button variant="ghost" size="icon-sm" aria-label="Editar meta de ahorro" className="rounded-full text-muted-foreground" onClick={() => setEditing(true)}>
-            <Pencil className="size-3.5" />
-          </Button>
+          <CardAction>
+            <Button variant="ghost" size="icon-sm" aria-label="Editar meta de ahorro" className="rounded-full text-muted-foreground" onClick={() => setEditing(true)}>
+              <Pencil className="size-3.5" />
+            </Button>
+          </CardAction>
         )}
       </CardHeader>
       <CardContent>
