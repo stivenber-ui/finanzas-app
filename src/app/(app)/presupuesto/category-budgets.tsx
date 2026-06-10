@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Pencil, Check, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 const currency = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
@@ -14,7 +16,7 @@ type CategoryRow = { id: string; name: string; monthly_budget: number | null; sp
 
 function BudgetBar({ spent, budget }: { spent: number; budget: number }) {
   const pct = Math.min(100, Math.round((spent / budget) * 100));
-  const color = pct >= 100 ? "#f43f5e" : pct >= 85 ? "#f59e0b" : "#10b981";
+  const color = pct >= 100 ? "var(--negative)" : pct >= 85 ? "var(--warning)" : "var(--success)";
   return (
     <div className="flex items-center gap-2">
       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
@@ -52,28 +54,28 @@ function CategoryBudgetRow({ cat }: { cat: CategoryRow }) {
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium truncate">{cat.name}</span>
         {!editing && (
-          <button type="button" onClick={() => setEditing(true)} className="flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted">
-            <Pencil className="size-3" />
-          </button>
+          <Button variant="ghost" size="icon-sm" aria-label={`Editar presupuesto de ${cat.name}`} className="shrink-0 rounded-full text-muted-foreground" onClick={() => setEditing(true)}>
+            <Pencil className="size-3.5" />
+          </Button>
         )}
       </div>
 
       {editing ? (
         <div className="flex items-center gap-2">
-          <input
-            className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-sm"
+          <Input
+            className="flex-1"
             inputMode="decimal"
             placeholder="Presupuesto mensual"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             autoFocus
           />
-          <button type="button" onClick={save} disabled={loading} className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground disabled:opacity-50">
+          <Button size="icon" aria-label="Guardar presupuesto" onClick={save} disabled={loading}>
             <Check className="size-4" />
-          </button>
-          <button type="button" onClick={() => { setValue(cat.monthly_budget != null ? amountFmt.format(cat.monthly_budget) : ""); setEditing(false); }} className="flex size-8 items-center justify-center rounded-md bg-muted">
+          </Button>
+          <Button variant="secondary" size="icon" aria-label="Cancelar edición" onClick={() => { setValue(cat.monthly_budget != null ? amountFmt.format(cat.monthly_budget) : ""); setEditing(false); }}>
             <X className="size-4" />
-          </button>
+          </Button>
         </div>
       ) : (
         <>

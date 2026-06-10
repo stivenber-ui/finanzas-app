@@ -2,8 +2,8 @@ export function CircleProgress({
   pct,
   size = 72,
   stroke = 6,
-  color = "hsl(var(--primary))",
-  trackColor = "hsl(var(--muted))",
+  color = "var(--primary)",
+  trackColor = "var(--muted)",
 }: {
   pct: number;
   size?: number;

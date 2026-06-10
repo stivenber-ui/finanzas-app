@@ -87,7 +87,7 @@ export default async function PresupuestoPage() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Presupuesto por categoría</CardTitle>
-          <p className="text-xs text-muted-foreground">Toca <span className="font-medium">✏️</span> para asignar un límite mensual a cada categoría.</p>
+          <p className="text-xs text-muted-foreground">Usa el lápiz para asignar un límite mensual a cada categoría.</p>
         </CardHeader>
         <CardContent>
           <CategoryBudgets categories={categoryRows} />

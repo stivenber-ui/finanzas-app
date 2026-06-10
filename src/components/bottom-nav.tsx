@@ -25,7 +25,7 @@ export function BottomNav() {
         <Link
           href="/movimientos/nuevo"
           aria-label="Registrar movimiento"
-          className="-translate-y-3 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
+          className="-translate-y-3 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-fab transition-transform active:scale-95"
         >
           <Plus className="size-6" />
         </Link>

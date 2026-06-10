@@ -2,7 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Wallet } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { CuentasList } from "./cuentas-list";
 
 const currency = new Intl.NumberFormat("es-CO", {
@@ -47,8 +48,12 @@ export default async function CuentasPage() {
 
       {!activeRows.length && (
         <Card>
-          <CardContent className="pt-6 text-sm text-muted-foreground">
-            Aún no tienes cuentas activas. Crea la primera con el botón &quot;Nueva&quot;.
+          <CardContent>
+            <EmptyState
+              icon={Wallet}
+              title="Aún no tienes cuentas activas"
+              description='Crea la primera con el botón "Nueva".'
+            />
           </CardContent>
         </Card>
       )}

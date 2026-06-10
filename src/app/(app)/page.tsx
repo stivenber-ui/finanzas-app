@@ -1,11 +1,24 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Target, ChevronRight, RefreshCw, BarChart2, Wallet } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Target, ChevronRight, RefreshCw, BarChart2, Wallet, TrendingUp, TrendingDown, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TrendChart } from "@/components/trend-chart";
 import { CircleProgress } from "@/components/circle-progress";
+import { CountUp } from "@/components/count-up";
+import { EmptyState } from "@/components/empty-state";
+
+const CHART_COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
+  "var(--chart-7)",
+  "var(--chart-8)",
+];
 
 const currency = new Intl.NumberFormat("es-CO", {
   style: "currency",
@@ -131,58 +144,74 @@ export default async function DashboardPage() {
   });
 
   const firstName = user?.email?.split("@")[0];
+  const monthNet = monthIncome - monthExpense;
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Hola{firstName ? `, ${firstName}` : ""} 👋</h1>
-        <p className="text-sm text-muted-foreground">Este es tu resumen financiero.</p>
+      {/* Hero: net worth */}
+      <div className="flex flex-col px-1 pt-2 pb-1 animate-in fade-in-0 slide-in-from-bottom-3 duration-500">
+        <p className="text-sm text-muted-foreground">Hola{firstName ? `, ${firstName}` : ""}</p>
+        <h1 className="mt-3 text-sm font-medium text-muted-foreground">Patrimonio neto</h1>
+        <p className={cn("mt-0.5 text-4xl font-semibold tracking-tight", netWorth < 0 && "text-negative")}>
+          <CountUp value={netWorth} />
+        </p>
+        {(monthIncome > 0 || monthExpense > 0) && (
+          <div className="mt-2.5">
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium",
+                monthNet >= 0 ? "bg-positive/10 text-positive" : "bg-negative/10 text-negative",
+              )}
+            >
+              {monthNet >= 0 ? <TrendingUp className="size-3.5" /> : <TrendingDown className="size-3.5" />}
+              {monthNet >= 0 ? "+" : "−"}{currency.format(Math.abs(monthNet))} este mes
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Net worth */}
-      <Card>
-        <CardHeader>
-          <CardDescription>Patrimonio neto</CardDescription>
-          <CardTitle className={cn("text-3xl", netWorth < 0 && "text-rose-500")}>{currency.format(netWorth)}</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Suma de saldos de todas tus cuentas, incluyendo deudas de tarjetas de crédito.
+      {/* Cash flow */}
+      <Card className="animate-in fade-in-0 slide-in-from-bottom-3 duration-500 [animation-delay:60ms] [animation-fill-mode:backwards]">
+        <CardContent className="flex items-stretch">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-positive/10 text-positive">
+              <ArrowUpRight className="size-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Ingresos del mes</p>
+              <p className="truncate text-base font-semibold">{currency.format(monthIncome)}</p>
+            </div>
+          </div>
+          <div className="mx-3 w-px shrink-0 bg-border" />
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-negative/10 text-negative">
+              <ArrowDownRight className="size-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Gastos del mes</p>
+              <p className="truncate text-base font-semibold">{currency.format(monthExpense)}</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Income / Expense / Savings rate */}
-      <div className="grid grid-cols-2 gap-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-1.5">
-              <ArrowUpRight className="size-4 text-emerald-500" /> Ingresos del mes
-            </CardDescription>
-            <CardTitle className="text-xl text-emerald-600 dark:text-emerald-400">{currency.format(monthIncome)}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-1.5">
-              <ArrowDownRight className="size-4 text-rose-500" /> Gastos del mes
-            </CardDescription>
-            <CardTitle className="text-xl text-rose-500">{currency.format(monthExpense)}</CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
-
       {savingsRate !== null && (
-        <Card>
-          <CardContent className="flex items-center justify-between pt-4">
+        <Card className="animate-in fade-in-0 slide-in-from-bottom-3 duration-500 [animation-delay:120ms] [animation-fill-mode:backwards]">
+          <CardContent className="flex items-center justify-between">
             <div className="flex flex-col gap-0.5">
-              <p className="text-sm font-medium">Tasa de ahorro este mes</p>
+              <p className="text-sm font-medium">Tasa de ahorro</p>
               <p className="text-xs text-muted-foreground">
-                {savingsRate >= 20 ? "Excelente ritmo" : savingsRate >= 10 ? "Buen ritmo" : savingsRate >= 0 ? "Margen de mejora" : "Gastos > ingresos"}
+                {savingsRate >= 20 ? "Excelente ritmo" : savingsRate >= 10 ? "Buen ritmo" : savingsRate >= 0 ? "Margen de mejora" : "Gastos mayores que ingresos"}
               </p>
-              <p className="text-xs text-muted-foreground">(Ingresos − Gastos) ÷ Ingresos</p>
             </div>
-            <div className="flex flex-col items-center">
-              <CircleProgress pct={Math.max(0, savingsRate)} size={64} stroke={6} color={savingsRate >= 20 ? "#10b981" : savingsRate >= 10 ? "#f59e0b" : "#f43f5e"} />
-              <span className="mt-1 text-xs font-semibold">{savingsRate}%</span>
+            <div className="relative shrink-0">
+              <CircleProgress
+                pct={Math.max(0, savingsRate)}
+                size={68}
+                stroke={6}
+                color={savingsRate >= 20 ? "var(--success)" : savingsRate >= 10 ? "var(--warning)" : "var(--negative)"}
+              />
+              <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold">{savingsRate}%</span>
             </div>
           </CardContent>
         </Card>
@@ -190,22 +219,28 @@ export default async function DashboardPage() {
 
       {/* Category breakdown */}
       {catBreakdown.length > 0 && (
-        <Card>
+        <Card className="animate-in fade-in-0 slide-in-from-bottom-3 duration-500 [animation-delay:180ms] [animation-fill-mode:backwards]">
           <CardHeader>
             <CardTitle className="text-base">Gastos por categoría este mes</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            {catBreakdown.map((cat) => (
+            {catBreakdown.map((cat, i) => (
               <div key={cat.name} className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">{cat.name}</span>
-                  <span className="text-muted-foreground">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
+                    <span className="truncate font-medium">{cat.name}</span>
+                  </div>
+                  <span className="ml-2 shrink-0 text-muted-foreground">
                     {currency.format(cat.total)}{" "}
                     <span className="text-xs">({monthExpense > 0 ? Math.round((cat.total / monthExpense) * 100) : 0}%)</span>
                   </span>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                  <div className="h-full rounded-full bg-rose-400" style={{ width: `${Math.round((cat.total / catMax) * 100)}%` }} />
+                <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${Math.round((cat.total / catMax) * 100)}%`, backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
+                  />
                 </div>
               </div>
             ))}
@@ -254,7 +289,7 @@ export default async function DashboardPage() {
               return (
                 <div key={goal.id} className="flex items-center gap-4">
                   <div className="relative shrink-0">
-                    <CircleProgress pct={pct} size={64} stroke={6} color={pct >= 100 ? "#10b981" : "hsl(var(--primary))"} />
+                    <CircleProgress pct={pct} size={64} stroke={6} color={pct >= 100 ? "var(--success)" : "var(--primary)"} />
                     <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">{pct}%</span>
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -273,43 +308,34 @@ export default async function DashboardPage() {
       )}
 
       {/* Quick access */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <Link href="/resumen">
-          <Card className="transition-colors active:bg-muted/60">
-            <CardContent className="flex items-center gap-3 pt-4 pb-4">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Card className="transition-all active:scale-[0.97] active:bg-muted/60">
+            <CardContent className="flex flex-col items-center gap-2">
+              <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <BarChart2 className="size-4" />
               </div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium">Resumen</p>
-                <p className="text-xs text-muted-foreground">Mensual</p>
-              </div>
+              <p className="text-xs font-medium">Resumen</p>
             </CardContent>
           </Card>
         </Link>
         <Link href="/presupuesto">
-          <Card className="transition-colors active:bg-muted/60">
-            <CardContent className="flex items-center gap-3 pt-4 pb-4">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          <Card className="transition-all active:scale-[0.97] active:bg-muted/60">
+            <CardContent className="flex flex-col items-center gap-2">
+              <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Wallet className="size-4" />
               </div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium">Presupuesto</p>
-                <p className="text-xs text-muted-foreground">Metas y límites</p>
-              </div>
+              <p className="text-xs font-medium">Presupuesto</p>
             </CardContent>
           </Card>
         </Link>
         <Link href="/recurrentes">
-          <Card className="transition-colors active:bg-muted/60">
-            <CardContent className="flex items-center gap-3 pt-4 pb-4">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Card className="transition-all active:scale-[0.97] active:bg-muted/60">
+            <CardContent className="flex flex-col items-center gap-2">
+              <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <RefreshCw className="size-4" />
               </div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium">Recurrentes</p>
-                <p className="text-xs text-muted-foreground">Periódicos</p>
-              </div>
+              <p className="text-xs font-medium">Recurrentes</p>
             </CardContent>
           </Card>
         </Link>
@@ -326,7 +352,9 @@ export default async function DashboardPage() {
           )}
         </CardHeader>
         {!recent?.length ? (
-          <CardContent className="pb-6 text-center text-sm text-muted-foreground">Aún no hay movimientos registrados.</CardContent>
+          <CardContent>
+            <EmptyState icon={Inbox} title="Aún no hay movimientos" description="Registra el primero con el botón + de abajo." />
+          </CardContent>
         ) : (
           <CardContent className="flex flex-col gap-3">
             {recent.map((tx) => (
@@ -354,18 +382,19 @@ function formatDateOnly(value: string) {
 
 function RecentRow({ tx }: { tx: RecentTx }) {
   const Icon = tx.type === "ingreso" ? ArrowUpRight : tx.type === "gasto" ? ArrowDownRight : ArrowLeftRight;
-  const iconColor = tx.type === "ingreso" ? "text-emerald-500" : tx.type === "gasto" ? "text-rose-500" : "text-muted-foreground";
+  const chip = tx.type === "ingreso" ? "bg-positive/10 text-positive" : tx.type === "gasto" ? "bg-negative/10 text-negative" : "bg-muted text-muted-foreground";
+  const amountColor = tx.type === "ingreso" ? "text-positive" : tx.type === "gasto" ? "text-foreground" : "text-muted-foreground";
   const sign = tx.type === "ingreso" ? "+" : tx.type === "gasto" ? "−" : "";
   return (
     <div className="flex items-center gap-3">
-      <div className={cn("flex size-9 shrink-0 items-center justify-center rounded-full bg-muted", iconColor)}>
+      <div className={cn("flex size-9 shrink-0 items-center justify-center rounded-full", chip)}>
         <Icon className="size-4" />
       </div>
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="truncate text-sm font-medium">{tx.notes || tx.categories?.name || tx.accounts?.name || "Movimiento"}</span>
         <span className="truncate text-xs text-muted-foreground">{formatDateOnly(tx.occurred_on)} · {tx.accounts?.name}</span>
       </div>
-      <span className={cn("shrink-0 text-sm font-semibold", iconColor)}>{sign}{currency.format(tx.amount)}</span>
+      <span className={cn("shrink-0 text-sm font-semibold", amountColor)}>{sign}{currency.format(tx.amount)}</span>
     </div>
   );
 }

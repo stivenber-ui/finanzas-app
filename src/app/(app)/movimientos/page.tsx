@@ -3,8 +3,9 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Tag, Download } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Tag, Download, Inbox, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/empty-state";
 import { MovimientosFilter } from "./movimientos-filter";
 
 const PAGE_SIZE = 30;
@@ -125,13 +126,13 @@ export default async function MovimientosPage({
         <div className="flex items-center gap-1">
           {!!count && (
             <span className="text-sm text-muted-foreground">
-              {count} {hasFilters ? "resultado(s)" : "en total"}
+              {count} {hasFilters ? (count === 1 ? "resultado" : "resultados") : "en total"}
             </span>
           )}
-          <Button render={<Link href={buildExportUrl(typeFilter, accountId, q, dateFrom, dateTo)} />} size="sm" variant="ghost" className="text-muted-foreground" title="Descargar CSV">
+          <Button render={<Link href={buildExportUrl(typeFilter, accountId, q, dateFrom, dateTo)} />} size="icon-sm" variant="ghost" className="text-muted-foreground" aria-label="Descargar CSV" title="Descargar CSV">
             <Download className="size-4" />
           </Button>
-          <Button render={<Link href="/categorias" />} size="sm" variant="ghost" className="text-muted-foreground">
+          <Button render={<Link href="/categorias" />} size="icon-sm" variant="ghost" className="text-muted-foreground" aria-label="Gestionar categorías" title="Gestionar categorías">
             <Tag className="size-4" />
           </Button>
         </div>
@@ -143,8 +144,12 @@ export default async function MovimientosPage({
 
       {!transactions.length && (
         <Card>
-          <CardContent className="pt-6 text-sm text-muted-foreground">
-            {hasFilters ? "Ningún movimiento coincide con los filtros." : "Aún no hay movimientos."}
+          <CardContent>
+            <EmptyState
+              icon={hasFilters ? SearchX : Inbox}
+              title={hasFilters ? "Sin resultados" : "Aún no hay movimientos"}
+              description={hasFilters ? "Ningún movimiento coincide con los filtros." : "Registra el primero con el botón + de abajo."}
+            />
           </CardContent>
         </Card>
       )}
@@ -199,8 +204,8 @@ function pageHref(p: number, type: string, accountId: string, q: string, dateFro
 
 function MovimientoRow({ tx }: { tx: Tx }) {
   const Icon = tx.type === "ingreso" ? ArrowUpRight : tx.type === "gasto" ? ArrowDownRight : ArrowLeftRight;
-  const iconColor =
-    tx.type === "ingreso" ? "text-emerald-500" : tx.type === "gasto" ? "text-rose-500" : "text-muted-foreground";
+  const chip = tx.type === "ingreso" ? "bg-positive/10 text-positive" : tx.type === "gasto" ? "bg-negative/10 text-negative" : "bg-muted text-muted-foreground";
+  const amountColor = tx.type === "ingreso" ? "text-positive" : tx.type === "gasto" ? "text-foreground" : "text-muted-foreground";
   const sign = tx.type === "ingreso" ? "+" : tx.type === "gasto" ? "−" : "";
 
   const subtitle =
@@ -213,14 +218,14 @@ function MovimientoRow({ tx }: { tx: Tx }) {
       href={`/movimientos/${tx.id}`}
       className="flex items-center gap-3 px-4 py-3 transition-colors active:bg-muted/60"
     >
-      <div className={cn("flex size-9 shrink-0 items-center justify-center rounded-full bg-muted", iconColor)}>
+      <div className={cn("flex size-9 shrink-0 items-center justify-center rounded-full", chip)}>
         <Icon className="size-4" />
       </div>
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="truncate text-sm font-medium">{tx.notes || tx.category?.name || "Movimiento"}</span>
         <span className="truncate text-xs text-muted-foreground">{subtitle}</span>
       </div>
-      <span className={cn("shrink-0 text-sm font-semibold", iconColor)}>
+      <span className={cn("shrink-0 text-sm font-semibold", amountColor)}>
         {sign}
         {currency.format(tx.amount)}
       </span>

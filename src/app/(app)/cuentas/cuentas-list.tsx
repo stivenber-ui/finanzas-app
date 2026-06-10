@@ -226,7 +226,7 @@ function AccountRow({
             {account.institution && <span className="truncate">{account.institution}</span>}
           </span>
         </div>
-        <span className={cn("shrink-0 text-base font-semibold", isDebt && "text-rose-500")}>
+        <span className={cn("shrink-0 text-base font-semibold", isDebt && "text-negative")}>
           {currency.format(account.balance)}
         </span>
         {!reorderMode && <ChevronRight className="size-4 shrink-0 text-muted-foreground" />}

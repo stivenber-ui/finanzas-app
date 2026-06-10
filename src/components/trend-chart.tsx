@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
+import { useState } from "react";
 import {
   BarChart,
   Bar,
@@ -29,28 +28,29 @@ function compactCOP(v: number): string {
 }
 
 const CAT_COLORS = [
-  "#f43f5e", "#fb923c", "#facc15", "#34d399", "#60a5fa",
-  "#a78bfa", "#f472b6", "#2dd4bf", "#fb7185", "#fbbf24",
-  "#4ade80", "#818cf8",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
+  "var(--chart-7)",
+  "var(--chart-8)",
 ];
 
-function TrendTooltip({ active, payload, label, isDark }: {
+function TrendTooltip({ active, payload, label }: {
   active?: boolean;
   payload?: { value: number; name: string; color?: string }[];
   label?: string;
-  isDark: boolean;
 }) {
   if (!active || !payload?.length) return null;
   const nonZero = payload.filter((p) => p.value > 0);
   if (!nonZero.length) return null;
-  const bg = isDark ? "#1f2937" : "#ffffff";
-  const border = isDark ? "#374151" : "#e5e7eb";
-  const textPrimary = isDark ? "#f9fafb" : "#111827";
   return (
-    <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 8, padding: "8px 12px", fontSize: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.2)", maxWidth: 220 }}>
-      <p style={{ fontWeight: 600, marginBottom: 4, color: textPrimary, textTransform: "capitalize" }}>{label}</p>
+    <div className="max-w-55 rounded-lg border border-border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-raised">
+      <p className="mb-1 font-semibold capitalize">{label}</p>
       {nonZero.map((p) => (
-        <p key={p.name} style={{ color: p.color ?? (p.name === "income" ? "#10b981" : "#f43f5e"), lineHeight: 1.6 }}>
+        <p key={p.name} className="leading-relaxed" style={{ color: p.color ?? (p.name === "income" ? "var(--positive)" : "var(--negative)") }}>
           {p.name === "income" ? "Ingresos" : p.name === "expense" ? "Gastos" : p.name}: {fullCurrency.format(p.value)}
         </p>
       ))}
@@ -86,7 +86,7 @@ function CategoryRanking({ categoryData, topCategories }: {
             key={m.label}
             type="button"
             onClick={() => setSelectedIdx(i)}
-            className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
               i === selectedIdx
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground hover:text-foreground"
@@ -116,7 +116,7 @@ function CategoryRanking({ categoryData, topCategories }: {
                   <span className="font-medium tabular-nums">{fullCurrency.format(cat.total)}</span>
                 </div>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{ width: `${Math.round((cat.total / max) * 100)}%`, backgroundColor: cat.color }}
@@ -139,16 +139,7 @@ export function TrendChart({
   categoryData?: CatMonthEntry[];
   topCategories?: string[];
 }) {
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
   const [view, setView] = useState<"trend" | "cats">("trend");
-
-  useEffect(() => setMounted(true), []);
-
-  const isDark = mounted && resolvedTheme === "dark";
-  const textColor = isDark ? "#9ca3af" : "#6b7280";
-  const gridColor = isDark ? "#374151" : "#e5e7eb";
-  const cursorColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)";
 
   const hasCategories = categoryData.length > 0 && topCategories.length > 0;
 
@@ -159,14 +150,14 @@ export function TrendChart({
           <button
             type="button"
             onClick={() => setView("trend")}
-            className={`flex-1 rounded-md py-1 transition-colors ${view === "trend" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+            className={`flex-1 rounded-md py-1.5 transition-colors ${view === "trend" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
           >
             Ingresos vs Gastos
           </button>
           <button
             type="button"
             onClick={() => setView("cats")}
-            className={`flex-1 rounded-md py-1 transition-colors ${view === "cats" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+            className={`flex-1 rounded-md py-1.5 transition-colors ${view === "cats" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
           >
             Por categoría
           </button>
@@ -176,13 +167,13 @@ export function TrendChart({
       {view === "trend" ? (
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="30%">
-            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-            <XAxis dataKey="label" tick={{ fontSize: 11, fill: textColor }} axisLine={false} tickLine={false} />
-            <YAxis tickFormatter={compactCOP} tick={{ fontSize: 11, fill: textColor }} axisLine={false} tickLine={false} width={48} />
-            <Tooltip content={<TrendTooltip isDark={isDark} />} cursor={{ fill: cursorColor }} />
-            <Legend formatter={(value) => <span style={{ fontSize: 11, color: textColor }}>{value === "income" ? "Ingresos" : "Gastos"}</span>} />
-            <Bar dataKey="income" fill="#10b981" radius={[3, 3, 0, 0]} maxBarSize={28} />
-            <Bar dataKey="expense" fill="#f43f5e" radius={[3, 3, 0, 0]} maxBarSize={28} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+            <YAxis tickFormatter={compactCOP} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} width={48} />
+            <Tooltip content={<TrendTooltip />} cursor={{ fill: "color-mix(in oklab, var(--foreground) 5%, transparent)" }} />
+            <Legend formatter={(value) => <span style={{ fontSize: 11, color: "var(--muted-foreground)" }}>{value === "income" ? "Ingresos" : "Gastos"}</span>} />
+            <Bar dataKey="income" fill="var(--positive)" radius={[3, 3, 0, 0]} maxBarSize={28} />
+            <Bar dataKey="expense" fill="var(--negative)" radius={[3, 3, 0, 0]} maxBarSize={28} />
           </BarChart>
         </ResponsiveContainer>
       ) : (

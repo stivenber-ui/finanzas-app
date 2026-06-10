@@ -11,6 +11,17 @@ const currency = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 0,
 });
 
+const CHART_COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
+  "var(--chart-7)",
+  "var(--chart-8)",
+];
+
 function startOfMonth(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-01`;
 }
@@ -104,60 +115,71 @@ export default async function ResumenPage({
   const startWeekday = firstDayOfWeek(month);
   const DAY_LABELS = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sá"];
 
-  function heatColor(amount: number): string {
-    if (!amount) return "hsl(var(--muted))";
+  const HEAT_SCALE = [
+    "color-mix(in oklab, var(--negative) 18%, var(--muted))",
+    "color-mix(in oklab, var(--negative) 42%, var(--muted))",
+    "color-mix(in oklab, var(--negative) 70%, var(--muted))",
+    "var(--negative)",
+  ];
+
+  function heatLevel(amount: number): number | null {
+    if (!amount) return null;
     const intensity = amount / maxDay;
-    if (intensity > 0.75) return "#f43f5e";
-    if (intensity > 0.5) return "#fb7185";
-    if (intensity > 0.25) return "#fda4af";
-    return "#fecdd3";
+    if (intensity > 0.75) return 3;
+    if (intensity > 0.5) return 2;
+    if (intensity > 0.25) return 1;
+    return 0;
   }
 
   return (
     <div className="flex flex-col gap-4">
       {/* Header */}
-      <div className="flex items-center gap-2">
-        <Link href="/" className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted">
-          <ChevronLeft className="size-5" />
-        </Link>
-        <h1 className="flex-1 text-2xl font-semibold tracking-tight capitalize">{monthTitle(month)}</h1>
-        <Link
-          href={`/resumen?month=${prevMonth}`}
-          className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted"
-        >
-          <ChevronLeft className="size-5" />
-        </Link>
-        <Link
-          href={isCurrentMonth ? "/resumen" : `/resumen?month=${nextMonth}`}
-          aria-disabled={isCurrentMonth}
-          className={cn(
-            "flex size-8 items-center justify-center rounded-full transition-colors hover:bg-muted",
-            isCurrentMonth ? "pointer-events-none opacity-30 text-muted-foreground" : "text-muted-foreground",
-          )}
-        >
-          <ChevronRight className="size-5" />
-        </Link>
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground">Resumen mensual</p>
+          <h1 className="text-2xl font-semibold tracking-tight capitalize">{monthTitle(month)}</h1>
+        </div>
+        <div className="flex items-center gap-1 rounded-full bg-muted p-1">
+          <Link
+            href={`/resumen?month=${prevMonth}`}
+            aria-label="Mes anterior"
+            className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground active:bg-background"
+          >
+            <ChevronLeft className="size-5" />
+          </Link>
+          <Link
+            href={isCurrentMonth ? "/resumen" : `/resumen?month=${nextMonth}`}
+            aria-label="Mes siguiente"
+            aria-disabled={isCurrentMonth}
+            className={cn(
+              "flex size-9 items-center justify-center rounded-full transition-colors hover:bg-background hover:text-foreground active:bg-background",
+              isCurrentMonth ? "pointer-events-none text-muted-foreground/40" : "text-muted-foreground",
+            )}
+          >
+            <ChevronRight className="size-5" />
+          </Link>
+        </div>
       </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-3">
         <Card>
-          <CardContent className="flex flex-col gap-0.5 pt-4">
+          <CardContent className="flex flex-col gap-0.5">
             <span className="text-xs text-muted-foreground">Ingresos</span>
-            <span className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">{currency.format(income)}</span>
+            <span className="text-lg font-semibold text-positive">{currency.format(income)}</span>
             {prevIncome > 0 && (
-              <span className={cn("text-xs", income >= prevIncome ? "text-emerald-500" : "text-rose-500")}>
+              <span className={cn("text-xs", income >= prevIncome ? "text-positive" : "text-negative")}>
                 {income >= prevIncome ? "+" : ""}{Math.round(((income - prevIncome) / prevIncome) * 100)}% vs mes anterior
               </span>
             )}
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="flex flex-col gap-0.5 pt-4">
+          <CardContent className="flex flex-col gap-0.5">
             <span className="text-xs text-muted-foreground">Gastos</span>
-            <span className="text-lg font-semibold text-rose-500">{currency.format(expense)}</span>
+            <span className="text-lg font-semibold">{currency.format(expense)}</span>
             {prevExpense > 0 && (
-              <span className={cn("text-xs", expense <= prevExpense ? "text-emerald-500" : "text-rose-500")}>
+              <span className={cn("text-xs", expense <= prevExpense ? "text-positive" : "text-negative")}>
                 {expense >= prevExpense ? "+" : ""}{Math.round(((expense - prevExpense) / prevExpense) * 100)}% vs mes anterior
               </span>
             )}
@@ -166,17 +188,17 @@ export default async function ResumenPage({
       </div>
 
       <Card>
-        <CardContent className="flex items-center justify-between pt-4">
+        <CardContent className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium">{balance >= 0 ? "Ahorro del mes" : "Déficit del mes"}</p>
-            <p className={cn("text-xl font-bold", balance >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500")}>
+            <p className={cn("text-xl font-semibold", balance >= 0 ? "text-positive" : "text-negative")}>
               {currency.format(Math.abs(balance))}
             </p>
           </div>
           {savingsRate !== null && (
             <div className="text-right">
               <p className="text-xs text-muted-foreground">Tasa de ahorro</p>
-              <p className={cn("text-2xl font-bold", savingsRate >= 20 ? "text-emerald-500" : savingsRate >= 10 ? "text-amber-500" : "text-rose-500")}>
+              <p className={cn("text-2xl font-semibold", savingsRate >= 20 ? "text-success" : savingsRate >= 10 ? "text-warning" : "text-negative")}>
                 {savingsRate}%
               </p>
             </div>
@@ -200,21 +222,22 @@ export default async function ResumenPage({
             {Array.from({ length: totalDays }).map((_, i) => {
               const day = i + 1;
               const amount = dayExpense.get(day) ?? 0;
+              const level = heatLevel(amount);
               return (
                 <div
                   key={day}
-                  className="relative flex aspect-square items-center justify-center rounded text-[10px] font-medium"
-                  style={{ backgroundColor: heatColor(amount) }}
+                  className="relative flex aspect-square items-center justify-center rounded-md text-[11px] font-medium"
+                  style={{ backgroundColor: level === null ? "var(--muted)" : HEAT_SCALE[level] }}
                   title={amount ? currency.format(amount) : "Sin gastos"}
                 >
-                  <span className={cn(amount ? "text-rose-900" : "text-muted-foreground")}>{day}</span>
+                  <span className={cn(level === null ? "text-muted-foreground" : level >= 2 ? "text-white" : "text-foreground")}>{day}</span>
                 </div>
               );
             })}
           </div>
-          <div className="mt-3 flex items-center justify-end gap-2 text-[10px] text-muted-foreground">
+          <div className="mt-3 flex items-center justify-end gap-2 text-[11px] text-muted-foreground">
             <span>Menos</span>
-            {["#fecdd3", "#fda4af", "#fb7185", "#f43f5e"].map((c) => (
+            {HEAT_SCALE.map((c) => (
               <div key={c} className="size-3 rounded-sm" style={{ backgroundColor: c }} />
             ))}
             <span>Más</span>
@@ -229,17 +252,20 @@ export default async function ResumenPage({
             <CardTitle className="text-base">Gastos por categoría</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            {catBreakdown.map((cat) => (
+            {catBreakdown.map((cat, i) => (
               <div key={cat.name} className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">{cat.name}</span>
-                  <span className="text-muted-foreground">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
+                    <span className="truncate font-medium">{cat.name}</span>
+                  </div>
+                  <span className="ml-2 shrink-0 text-muted-foreground">
                     {currency.format(cat.total)}
                     {expense > 0 && <span className="ml-1 text-xs">({Math.round((cat.total / expense) * 100)}%)</span>}
                   </span>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                  <div className="h-full rounded-full bg-rose-400" style={{ width: `${Math.round((cat.total / catMax) * 100)}%` }} />
+                <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                  <div className="h-full rounded-full" style={{ width: `${Math.round((cat.total / catMax) * 100)}%`, backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
                 </div>
               </div>
             ))}

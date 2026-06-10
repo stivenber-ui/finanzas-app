@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Pencil, Check, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CircleProgress } from "@/components/circle-progress";
@@ -28,7 +29,7 @@ export function SavingsGoalCard({
   const [loading, setLoading] = useState(false);
 
   const pct = goal && goal > 0 ? Math.round((Math.max(0, saved) / goal) * 100) : null;
-  const color = pct == null ? "#9ca3af" : pct >= 100 ? "#10b981" : pct >= 70 ? "#f59e0b" : "#60a5fa";
+  const color = pct == null ? "var(--muted-foreground)" : pct >= 100 ? "var(--success)" : pct >= 70 ? "var(--warning)" : "var(--primary)";
 
   async function save() {
     const num = Number(value.replace(/\./g, "").replace(",", "."));
@@ -52,9 +53,9 @@ export function SavingsGoalCard({
       <CardHeader className="pb-2 flex-row items-center justify-between">
         <CardTitle className="text-base">Meta de ahorro mensual</CardTitle>
         {!editing && (
-          <button type="button" onClick={() => setEditing(true)} className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted">
+          <Button variant="ghost" size="icon-sm" aria-label="Editar meta de ahorro" className="rounded-full text-muted-foreground" onClick={() => setEditing(true)}>
             <Pencil className="size-3.5" />
-          </button>
+          </Button>
         )}
       </CardHeader>
       <CardContent>
@@ -69,12 +70,12 @@ export function SavingsGoalCard({
               autoFocus
             />
             <div className="flex gap-2">
-              <button type="button" onClick={save} disabled={loading} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary py-2 text-sm font-medium text-primary-foreground transition-opacity disabled:opacity-50">
+              <Button className="flex-1" onClick={save} disabled={loading}>
                 <Check className="size-4" /> Guardar
-              </button>
-              <button type="button" onClick={cancel} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-muted py-2 text-sm font-medium transition-colors hover:bg-muted/80">
+              </Button>
+              <Button variant="secondary" className="flex-1" onClick={cancel}>
                 <X className="size-4" /> Cancelar
-              </button>
+              </Button>
             </div>
           </div>
         ) : goal != null ? (
