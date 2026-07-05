@@ -268,6 +268,11 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Metas activas</CardTitle>
+            <CardAction>
+              <Button render={<Link href="/presupuestos" />} variant="ghost" size="sm" className="text-xs text-muted-foreground">
+                Ver todas <ChevronRight className="ml-0.5 size-3" />
+              </Button>
+            </CardAction>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
             {sortedGoals.map((goal) => {
@@ -289,7 +294,11 @@ export default async function DashboardPage() {
               }
 
               return (
-                <div key={goal.id} className="flex items-center gap-4">
+                <Link
+                  key={goal.id}
+                  href={`/presupuestos/${goal.id}`}
+                  className="flex items-center gap-4 rounded-lg transition-colors active:bg-muted/60"
+                >
                   <div className="relative shrink-0">
                     <CircleProgress pct={pct} size={64} stroke={6} color={pct >= 100 ? "var(--success)" : "var(--primary)"} />
                     <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">{pct}%</span>
@@ -302,7 +311,8 @@ export default async function DashboardPage() {
                     <span className="text-xs text-muted-foreground">{currency.format(current)} / {currency.format(target)}</span>
                     <p className="text-xs text-muted-foreground">{tip}</p>
                   </div>
-                </div>
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                </Link>
               );
             })}
           </CardContent>
