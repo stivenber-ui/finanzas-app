@@ -33,10 +33,12 @@ export function NuevoMovimientoForm({
   accounts,
   categories,
   goals,
+  initialGoalId,
 }: {
   accounts: Account[];
   categories: Category[];
   goals: Goal[];
+  initialGoalId?: string;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -46,7 +48,7 @@ export function NuevoMovimientoForm({
   const [accountId, setAccountId] = useState("");
   const [toAccountId, setToAccountId] = useState("");
   const [categoryId, setCategoryId] = useState("");
-  const [goalId, setGoalId] = useState("");
+  const [goalId, setGoalId] = useState(initialGoalId ?? "");
   const [occurredOn, setOccurredOn] = useState(todayLocalISODate());
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -73,7 +75,7 @@ export function NuevoMovimientoForm({
     setType(nextType);
     setCategoryId("");
     setToAccountId("");
-    setGoalId("");
+    if (nextType === "transferencia") setGoalId("");
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -101,7 +103,7 @@ export function NuevoMovimientoForm({
 
     toast.success("Movimiento registrado");
     router.refresh();
-    router.replace("/");
+    router.replace(initialGoalId ? `/presupuestos/${initialGoalId}` : "/");
   }
 
   return (
