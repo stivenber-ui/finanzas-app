@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Target, ChevronRight, RefreshCw, BarChart2, Wallet, TrendingUp, TrendingDown, Inbox } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Target, ChevronRight, RefreshCw, BarChart2, Wallet, TrendingUp, TrendingDown, Inbox, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TrendChart } from "@/components/trend-chart";
 import { CircleProgress } from "@/components/circle-progress";
@@ -64,6 +64,7 @@ export default async function DashboardPage() {
     { data: goals },
     { data: goalContributions },
     { data: catTrendTxs },
+    { data: assets },
   ] = await Promise.all([
     supabase.from("account_balances").select("current_balance, type"),
     supabase.from("monthly_category_totals").select("type, total_amount").eq("period_month", periodMonth).in("type", ["ingreso", "gasto"]),
@@ -73,9 +74,12 @@ export default async function DashboardPage() {
     supabase.from("goals").select("id, name, target_amount, initial_amount, target_date").eq("status", "activa"),
     supabase.from("transactions").select("goal_id, amount").not("goal_id", "is", null),
     supabase.from("transactions").select("occurred_on, amount, categories(name)").eq("type", "gasto").gte("occurred_on", sixMonthsAgo).lt("occurred_on", nextMonthStart),
+    supabase.from("assets").select("current_value").is("archived_at", null),
   ]);
 
-  const netWorth = (balances ?? []).reduce((sum, a) => sum + Number(a.current_balance), 0);
+  const liquidNetWorth = (balances ?? []).reduce((sum, a) => sum + Number(a.current_balance), 0);
+  const assetsValue = (assets ?? []).reduce((sum, a) => sum + Number(a.current_value), 0);
+  const netWorth = liquidNetWorth + assetsValue;
   const monthIncome = (totals ?? []).filter((t) => t.type === "ingreso").reduce((sum, t) => sum + Number(t.total_amount), 0);
   const monthExpense = (totals ?? []).filter((t) => t.type === "gasto").reduce((sum, t) => sum + Number(t.total_amount), 0);
   const savingsRate = monthIncome > 0 ? Math.round(((monthIncome - monthExpense) / monthIncome) * 100) : null;
@@ -155,6 +159,11 @@ export default async function DashboardPage() {
         <p className={cn("mt-0.5 text-4xl font-semibold tracking-tight", netWorth < 0 && "text-negative")}>
           <CountUp value={netWorth} />
         </p>
+        {assetsValue > 0 && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            {currency.format(liquidNetWorth)} líquido + {currency.format(assetsValue)} en bienes
+          </p>
+        )}
         {(monthIncome > 0 || monthExpense > 0) && (
           <div className="mt-2.5">
             <span
@@ -263,17 +272,26 @@ export default async function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Active goals */}
-      {sortedGoals.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Metas activas</CardTitle>
-            <CardAction>
-              <Button render={<Link href="/presupuestos" />} variant="ghost" size="sm" className="text-xs text-muted-foreground">
-                Ver todas <ChevronRight className="ml-0.5 size-3" />
-              </Button>
-            </CardAction>
-          </CardHeader>
+      {/* Goals */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{sortedGoals.length > 0 ? "Metas activas" : "Metas"}</CardTitle>
+          <CardAction>
+            <Button
+              render={<Link href={sortedGoals.length > 0 ? "/presupuestos" : "/presupuestos/nueva"} />}
+              variant="ghost"
+              size="sm"
+              className="text-xs text-muted-foreground"
+            >
+              {sortedGoals.length > 0 ? "Ver todas" : "Nueva"} <ChevronRight className="ml-0.5 size-3" />
+            </Button>
+          </CardAction>
+        </CardHeader>
+        {sortedGoals.length === 0 ? (
+          <CardContent>
+            <EmptyState icon={Target} title="Aún no tienes metas" description='Crea la primera con el botón "Nueva".' />
+          </CardContent>
+        ) : (
           <CardContent className="flex flex-col gap-5">
             {sortedGoals.map((goal) => {
               const current = Number(goal.initial_amount) + (contributedByGoal.get(goal.id) ?? 0);
@@ -316,8 +334,8 @@ export default async function DashboardPage() {
               );
             })}
           </CardContent>
-        </Card>
-      )}
+        )}
+      </Card>
 
       {/* Quick access */}
       <div className="grid grid-cols-3 gap-3">
@@ -348,6 +366,26 @@ export default async function DashboardPage() {
                 <RefreshCw className="size-4" />
               </div>
               <p className="text-xs font-medium">Recurrentes</p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/presupuestos">
+          <Card className="transition-all active:scale-[0.97] active:bg-muted/60">
+            <CardContent className="flex flex-col items-center gap-2">
+              <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Target className="size-4" />
+              </div>
+              <p className="text-xs font-medium">Metas</p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/bienes">
+          <Card className="transition-all active:scale-[0.97] active:bg-muted/60">
+            <CardContent className="flex flex-col items-center gap-2">
+              <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Package className="size-4" />
+              </div>
+              <p className="text-xs font-medium">Bienes</p>
             </CardContent>
           </Card>
         </Link>
