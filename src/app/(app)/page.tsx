@@ -79,7 +79,6 @@ export default async function DashboardPage() {
 
   const liquidNetWorth = (balances ?? []).reduce((sum, a) => sum + Number(a.current_balance), 0);
   const assetsValue = (assets ?? []).reduce((sum, a) => sum + Number(a.current_value), 0);
-  const netWorth = liquidNetWorth + assetsValue;
   const monthIncome = (totals ?? []).filter((t) => t.type === "ingreso").reduce((sum, t) => sum + Number(t.total_amount), 0);
   const monthExpense = (totals ?? []).filter((t) => t.type === "gasto").reduce((sum, t) => sum + Number(t.total_amount), 0);
   const savingsRate = monthIncome > 0 ? Math.round(((monthIncome - monthExpense) / monthIncome) * 100) : null;
@@ -156,13 +155,14 @@ export default async function DashboardPage() {
       <div className="flex flex-col px-1 pt-2 pb-1 animate-in fade-in-0 slide-in-from-bottom-3 duration-500">
         <p className="text-sm text-muted-foreground">Hola{firstName ? `, ${firstName}` : ""}</p>
         <h1 className="mt-3 text-sm font-medium text-muted-foreground">Patrimonio neto</h1>
-        <p className={cn("mt-0.5 text-4xl font-semibold tracking-tight", netWorth < 0 && "text-negative")}>
-          <CountUp value={netWorth} />
+        <p className={cn("mt-0.5 text-4xl font-semibold tracking-tight", liquidNetWorth < 0 && "text-negative")}>
+          <CountUp value={liquidNetWorth} />
         </p>
         {assetsValue > 0 && (
-          <p className="mt-1 text-xs text-muted-foreground">
-            {currency.format(liquidNetWorth)} líquido + {currency.format(assetsValue)} en bienes
-          </p>
+          <Link href="/bienes" className="mt-1 inline-flex w-fit items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground">
+            <Package className="size-3" />
+            + {currency.format(assetsValue)} en bienes (aparte)
+          </Link>
         )}
         {(monthIncome > 0 || monthExpense > 0) && (
           <div className="mt-2.5">

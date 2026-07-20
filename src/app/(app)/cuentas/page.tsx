@@ -30,7 +30,6 @@ export default async function CuentasPage() {
   const archivedRows = allRows.filter((a) => !!a.archived_at);
   const liquidNetWorth = (balances ?? []).reduce((sum, b) => sum + Number(b.current_balance), 0);
   const assetsValue = (assets ?? []).reduce((sum, a) => sum + Number(a.current_value), 0);
-  const netWorth = liquidNetWorth + assetsValue;
 
   return (
     <div className="flex flex-col gap-4">
@@ -46,12 +45,12 @@ export default async function CuentasPage() {
         <CardContent className="flex flex-col gap-3 pt-6">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Patrimonio neto</span>
-            <span className="text-xl font-semibold">{currency.format(netWorth)}</span>
+            <span className="text-xl font-semibold">{currency.format(liquidNetWorth)}</span>
           </div>
           <Link href="/bienes" className="flex items-center justify-between text-sm text-muted-foreground transition-colors hover:text-foreground">
             <span className="flex items-center gap-1.5">
               <Package className="size-3.5" />
-              Bienes ({currency.format(assetsValue)})
+              Bienes ({currency.format(assetsValue)}) — aparte del patrimonio líquido
             </span>
             <ChevronRight className="size-4" />
           </Link>
